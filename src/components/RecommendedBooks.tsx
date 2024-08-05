@@ -1,74 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import Slider from 'react-slick';
-import { AudioBook, fetchAudiobooks } from '@/services/librivoxApi';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import React, { useEffect } from "react";
+import { Book } from "@/types/book";
 
 interface RecommendedBooksProps {
-  previouslyListened: string[]; // Array of previously listened book IDs
+  currentBook: Book;
+  allBooks: Book[];
 }
 
-const RecommendedBooks: React.FC<RecommendedBooksProps> = ({ previouslyListened }) => {
-  const [recommendedBooks, setRecommendedBooks] = useState<AudioBook[]>([]);
+const RecommendedBooks: React.FC<RecommendedBooksProps> = ({
+  currentBook,
+  allBooks,
+}) => {
+  const getRecommendedBooks = () => {
+    const tagCounts = allBooks.reduce((acc, book) => {
+      book.tags.forEach((tag) => {
+        const lowercaseTag = tag.toLowerCase();
+        acc[lowercaseTag] = (acc[lowercaseTag] || 0) + 1;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+    const targetTags = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([tag]) => tag);
+
+    const recommended = allBooks
+      .filter(
+        (book) =>
+          book.id !== currentBook.id &&
+          book.tags.some((tag) => targetTags.includes(tag.toLowerCase()))
+      )
+      .slice(0, 8);
+
+    console.log("Recommended books:", recommended);
+    return recommended;
+  };
+  const recommendedBooks = getRecommendedBooks();
 
   useEffect(() => {
-    async function fetchRecommendedBooks() {
-      // For this example, we're just fetching recent books
-      // In a real application, you'd implement a recommendation algorithm
-      const books = await fetchAudiobooks({ limit: '10' });
-      setRecommendedBooks(books);
-    }
-
-    fetchRecommendedBooks();
-  }, [previouslyListened]);
-
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-    ],
-  };
+    console.log("Current book:", currentBook);
+    console.log("All books:", allBooks);
+  }, [currentBook, allBooks]);
 
   return (
-    <div className="my-8">
-      <h2 className="text-2xl font-bold mb-4">Recommended Books</h2>
-      <Slider {...settings}>
-        {recommendedBooks.map((book) => (
-          <div key={book.id} className="px-2">
-            <img
-              src={book.coverImage}
-              alt={book.title}
-              className="w-full h-48 object-cover rounded-lg"
-            />
-            <h3 className="mt-2 font-semibold">{book.title}</h3>
-            <p className="text-sm text-gray-600">{book.author}</p>
+    <div className="grid grid-cols-4 gap-4">
+      {recommendedBooks.map((book) => (
+        <div key={book.id} className="bg-white rounded-lg shadow-md p-4">
+          <img
+            src={book.imageLink}
+            alt={book.title}
+            className="w-full h-48 object-cover mb-2 rounded"
+          />
+          <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
+          <p className="text-sm text-gray-600 mb-1">{book.author}</p>
+          <div className="flex justify-between items-center text-sm text-gray-500">
+            <span>{book.averageRating.toFixed(1)} ★</span>
+            <span>{Math.floor(Math.random() * 20 + 5)}m</span>
           </div>
-        ))}
-      </Slider>
+        </div>
+      ))}
     </div>
   );
 };
