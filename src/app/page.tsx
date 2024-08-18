@@ -5,29 +5,33 @@ import { BsStarFill, BsStarHalf } from "react-icons/bs";
 import { BiCrown } from "react-icons/bi";
 import { RiLeafLine } from "react-icons/ri";
 import LoginButton from "@/components/auth/LoginButton";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import Image from "next/image";
 
 export default function Home() {
   const [highlightIndex1, setHighlightIndex1] = useState(0);
   const [highlightIndex2, setHighlightIndex2] = useState(0);
-  const highlights1 = [
+
+  // Memoized highlights arrays to prevent unnecessary re-renders
+  const highlights1 = useMemo(() => [
     "Enhance your knowledge",
     "Achieve greater success",
     "Improve your health",
     "Develop better parenting skills",
     "Increase happiness",
     "Be the best version of yourself!",
-  ];
-  const highlights2 = [
+  ], []);
+
+  const highlights2 = useMemo(() => [
     "Expand your learning",
     "Accomplish your goals",
     "Strengthen your vitality",
     "Become a better caregiver",
     "Improve your mood",
     "Maximize your abilities",
-  ];
+  ], []);
 
   const [landingRef, landingInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [featuresRef, featuresInView] = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -48,7 +52,7 @@ export default function Home() {
       clearInterval(intervalId1);
       clearInterval(intervalId2);
     };
-  }, []);
+  }, [highlights1, highlights2]);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -69,10 +73,15 @@ export default function Home() {
       >
         <div className="flex justify-between items-center max-w-[1070px] w-full h-full mx-auto px-6">
           <figure className="max-w-[200px]">
-            <img
-              className="w-full h-full"
-              src="./assets/logo.png"
+            <Image
+              src="/assets/logo.png"
               alt="logo"
+              width={200}
+              height={67}  // Adjust this based on your logo's aspect ratio
+              style={{
+                width: '100%',
+                height: 'auto',
+              }}
             />
           </figure>
           <ul className="flex gap-6">
@@ -121,9 +130,11 @@ export default function Home() {
               variants={fadeInUp}
               className="mt-8 md:mt-0 md:w-1/2 flex justify-end"
             >
-              <img
-                src="./assets/landing.png"
+              <Image
+                src="/assets/landing.png"
                 alt="landing"
+                width={400}
+                height={300}  // Adjust this based on your image's aspect ratio
                 className="w-full max-w-[400px]"
               />
             </motion.figure>
@@ -331,7 +342,7 @@ export default function Home() {
                 <p className="text-[#394547] leading-relaxed" dangerouslySetInnerHTML={{ __html: review.content }}></p>
               </motion.div>
             ))}
-         <motion.div variants={fadeInUp} className="flex justify-center">
+            <motion.div variants={fadeInUp} className="flex justify-center">
               <LoginButton>Login</LoginButton>
             </motion.div>
           </div>

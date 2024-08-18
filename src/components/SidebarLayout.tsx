@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -34,11 +35,16 @@ interface SidebarLink {
   cursorTo: string;
 }
 
-interface LeftSidebarProps {
-  sidebarLinks: ReadonlyArray<SidebarLink>;
-}
+const sidebarLinks: ReadonlyArray<SidebarLink> = [
+  { iconName: "AiOutlineHome", route: "/", label: "Home", cursorTo: "pointer" },
+  { iconName: "PiBookmarkSimple", route: "/library", label: "My Library", cursorTo: "pointer" },
+  { iconName: "LuPencilLine", route: "/for-you", label: "For You", cursorTo: "pointer" },
+  { iconName: "CgSearch", route: "/search", label: "Search", cursorTo: "pointer" },
+  { iconName: "BsGear", route: "/settings", label: "Settings", cursorTo: "pointer" },
+  { iconName: "IoMdHelpCircleOutline", route: "/help", label: "Help & Support", cursorTo: "pointer" },
+];
 
-const LeftSidebar = ({ sidebarLinks }: LeftSidebarProps) => {
+const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [user, loading] = useAuthState(auth);
 
@@ -77,8 +83,8 @@ const LeftSidebar = ({ sidebarLinks }: LeftSidebarProps) => {
   );
 
   return (
-    <div>
-      <section className="left_sidebar flex flex-col h-screen bg-white shadow-md w-64 py-6 px-4">
+    <div className="flex">
+      <section className="left_sidebar flex flex-col h-[100vh] bg-white shadow-md w-64 py-6 px-4">
         <div className="flex-grow">
           <Link href="/" className="flex items-center gap-2 mb-8">
             <Image
@@ -101,8 +107,9 @@ const LeftSidebar = ({ sidebarLinks }: LeftSidebarProps) => {
           </LoginButton>
         </div>
       </section>
+      <main className="flex-1">{children}</main>
     </div>
   );
 };
 
-export default LeftSidebar;
+export default SidebarLayout;
