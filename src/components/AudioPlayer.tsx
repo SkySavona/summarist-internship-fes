@@ -1,3 +1,6 @@
+"use client";
+
+
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -110,11 +113,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
   useEffect(() => {
     const audioElement = audioRef.current;
     if (audio?.audioUrl) {
-      if (audioElement) {
-        audioElement.play().then(() => {
-          setIsPlaying(true);
-        });
-      }
+      setIsPlaying(false); // Ensure the player does not auto-play
     } else {
       audioElement?.pause();
       setIsPlaying(false);
