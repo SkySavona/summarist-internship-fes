@@ -23,12 +23,16 @@ const SearchBar: React.FC = () => {
   }, [searchQuery]);
 
   const performSearch = async (query: string) => {
-    console.log(`Searching for: ${query}`);
-    const simulatedResults: Book[] = [
-      { id: "1", title: `Book about ${query}` },
-      { id: "2", title: `Another book on ${query}` },
-    ];
-    setSearchResults(simulatedResults);
+    try {
+      const response = await fetch(
+        `https://librivox.org/api/feed/audiobooks/search?q=${query}`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      setSearchResults([]);
+    }
   };
 
   return (
