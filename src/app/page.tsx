@@ -14,7 +14,6 @@ export default function Home() {
   const [highlightIndex1, setHighlightIndex1] = useState(0);
   const [highlightIndex2, setHighlightIndex2] = useState(0);
 
-  // Memoized highlights arrays to prevent unnecessary re-renders
   const highlights1 = useMemo(() => [
     "Enhance your knowledge",
     "Achieve greater success",
@@ -77,7 +76,7 @@ export default function Home() {
               src="/assets/logo.png"
               alt="logo"
               width={200}
-              height={67}  // Adjust this based on your logo's aspect ratio
+              height={67}  
               style={{
                 width: '100%',
                 height: 'auto',
