@@ -78,6 +78,7 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
           src={book.imageLink}
           alt={book.title}
           fill
+          sizes="(min-width: 640px) 200px, 100px"
           style={{ objectFit: "contain" }}
           onError={(e) => {
             e.currentTarget.src = "/placeholder-image.jpg";

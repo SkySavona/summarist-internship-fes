@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import { CgSearch } from "react-icons/cg";
 import { BsGear } from "react-icons/bs";
 import { IoMdHelpCircleOutline } from "react-icons/io";
 import { CiLogin } from "react-icons/ci";
-import { useAuthState } from "react-firebase-hooks/auth";
+import { User } from "firebase/auth";
 import { auth } from "@/services/firebase";
 
 const iconMap = {
@@ -44,9 +44,19 @@ const sidebarLinks: ReadonlyArray<SidebarLink> = [
   { iconName: "IoMdHelpCircleOutline", route: "/help", label: "Help & Support", cursorTo: "pointer" },
 ];
 
-const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
+const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
-  const [user, loading] = useAuthState(auth);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const renderLink = (
     { route, label, iconName, cursorTo }: SidebarLink,

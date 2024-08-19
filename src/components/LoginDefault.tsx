@@ -33,6 +33,7 @@ const LoginDefault: React.FC<LoginDefaultProps> = ({
                 src="/assets/login.png"
                 alt="Login illustration"
                 layout="fill"
+                sizes='100%'
                 objectFit="contain"
               />
             </div>
