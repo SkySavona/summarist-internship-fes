@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Import usePathname
+import { useRouter, usePathname } from "next/navigation";
 import { User } from "firebase/auth";
 import { signOut } from "firebase/auth";
 import { auth } from "@/services/firebase";
@@ -26,8 +26,9 @@ const LoginButton: React.FC<ButtonProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
+  const [showSignInPopup, setShowSignInPopup] = useState(false); // New state for sign-in popup
   const router = useRouter();
-  const pathname = usePathname(); // Get the current pathname
+  const pathname = usePathname(); 
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -46,6 +47,11 @@ const LoginButton: React.FC<ButtonProps> = ({
 
   const handleLoginSuccess = () => {
     setIsModalOpen(false);
+    setShowSignInPopup(true); // Show sign-in popup
+    setTimeout(() => {
+      setShowSignInPopup(false);
+    }, 3000);
+
     if (onLoginSuccess) {
       onLoginSuccess();
     }
@@ -80,6 +86,11 @@ const LoginButton: React.FC<ButtonProps> = ({
       {showSignOutPopup && (
         <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
           Successfully signed out!
+        </div>
+      )}
+      {showSignInPopup && (
+        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
+          Successfully signed in!
         </div>
       )}
     </>
