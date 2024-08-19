@@ -27,21 +27,21 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
   useEffect(() => {
     const fetchAudioDuration = async () => {
       try {
-        // First, fetch the book details to get the audioLink
+        // Fetch the book details to get the audioLink
         const bookResponse = await fetch(`https://us-central1-summaristt.cloudfunctions.net/getBook?id=${book.id}`);
         const bookData = await bookResponse.json();
         const audioLink = bookData.audioLink;
 
         if (audioLink) {
           const audio = new Audio(audioLink);
-          audio.addEventListener('loadedmetadata', () => {
+          audio.addEventListener("loadedmetadata", () => {
             const duration = audio.duration;
             const minutes = Math.floor(duration / 60);
             const seconds = Math.floor(duration % 60);
-            setAudioDuration(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            setAudioDuration(`${minutes}:${seconds.toString().padStart(2, "0")}`);
           });
 
-          audio.addEventListener('error', () => {
+          audio.addEventListener("error", () => {
             console.error("Error loading audio file");
             setAudioDuration("Duration not available");
           });
@@ -78,15 +78,15 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
           src={book.imageLink}
           alt={book.title}
           fill
-          style={{ objectFit: 'contain' }}
+          style={{ objectFit: "contain" }}
           onError={(e) => {
             e.currentTarget.src = "/placeholder-image.jpg";
           }}
         />
         {book.subscriptionRequired && (
-          <div className="absolute bottom-50 left-40 bg-blue-1 text-white text-xs px-2 py-1 rounded-full">
-            Premium
-          </div>
+       <div className="absolute top-2 right-2 bg-blue-1 text-white text-xs px-2 py-1 rounded-full">
+       Premium
+     </div>
         )}
       </div>
       <h3 className="text-lg font-bold">{book.title}</h3>
