@@ -16,7 +16,6 @@ interface Book {
 
 const SearchBar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -25,63 +24,15 @@ const SearchBar: React.FC = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const [suggestedResponse, recommendedResponse] = await Promise.all([
-          fetch('https://us-central1-summaristt.cloudfunctions.net/getBooks?status=suggested'),
-          fetch('https://us-central1-summaristt.cloudfunctions.net/getBooks?status=recommended')
-        ]);
-
-        const suggestedBooks = await suggestedResponse.json();
-        const recommendedBooks = await recommendedResponse.json();
-
-        const combinedBooks = [...suggestedBooks, ...recommendedBooks].map((book: any) => ({
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          subTitle: book.subTitle,
-          imageLink: book.imageLink
-        }));
-
-        setAllBooks(combinedBooks);
-      } catch (error) {
-        console.error("Error fetching books:", error);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-
-    fetchBooks();
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery) {
-      setIsSearching(true);
-      const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = allBooks.filter(book => 
-        book.title.toLowerCase().includes(lowercasedQuery) ||
-        book.author.toLowerCase().includes(lowercasedQuery) ||
-        (book.subTitle && book.subTitle.toLowerCase().includes(lowercasedQuery))
-      );
-      setFilteredBooks(filtered);
-      setIsDropdownOpen(true);
-      setIsSearching(false);
-    } else {
-      setFilteredBooks([]);
-      setIsDropdownOpen(false);
-    }
-  }, [searchQuery, allBooks]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -90,9 +41,41 @@ const SearchBar: React.FC = () => {
     setIsDropdownOpen(false);
   }, [pathname]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
     setIsSearching(true);
+
+    if (query) {
+      try {
+        const response = await fetch(
+          `https://us-central1-summaristt.cloudfunctions.net/getBooksByAuthorOrTitle?search=${query}`
+        );
+
+        if (response.ok) {
+          const books = await response.json();
+          const formattedBooks = books.map((book: any) => ({
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            subTitle: book.subTitle,
+            imageLink: book.imageLink,
+          }));
+          setFilteredBooks(formattedBooks);
+        } else {
+          console.error("Error fetching books:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching books:", error);
+      } finally {
+        setIsSearching(false);
+        setIsDropdownOpen(true);
+      }
+    } else {
+      setFilteredBooks([]);
+      setIsDropdownOpen(false);
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -111,7 +94,7 @@ const SearchBar: React.FC = () => {
           size={18}
         />
       </div>
-      {isDropdownOpen && !isInitialLoading && (
+      {isDropdownOpen && (
         <div className="absolute w-full mt-1 bg-white shadow-lg rounded-md z-10 max-h-60 overflow-y-auto">
           {isSearching ? (
             <SearchBarSkeleton />
@@ -119,11 +102,17 @@ const SearchBar: React.FC = () => {
             filteredBooks.map((book) => (
               <Link href={`/book/${book.id}`} key={book.id}>
                 <div className="p-2 hover:bg-gray-100 text-sm flex items-start cursor-pointer">
-                  <img src={book.imageLink} alt={book.title} className="w-12 h-16 object-cover mr-3" />
+                  <img
+                    src={book.imageLink}
+                    alt={book.title}
+                    className="w-12 h-16 object-cover mr-3"
+                  />
                   <div>
                     <div className="font-semibold">{book.title}</div>
                     <div className="text-xs text-gray-600">{book.author}</div>
-                    {book.subTitle && <div className="text-xs text-gray-500">{book.subTitle}</div>}
+                    {book.subTitle && (
+                      <div className="text-xs text-gray-500">{book.subTitle}</div>
+                    )}
                   </div>
                 </div>
               </Link>

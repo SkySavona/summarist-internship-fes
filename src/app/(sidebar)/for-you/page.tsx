@@ -29,7 +29,7 @@ const ForYou: React.FC = () => {
         </div>
 
         <div
-          className={`absolute top-20 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
+          className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
             isLoading ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -39,7 +39,7 @@ const ForYou: React.FC = () => {
         </div>
 
         <div
-          className={`absolute top-20 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
+          className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
             isLoading ? "opacity-0" : "opacity-100"
           }`}
         >
