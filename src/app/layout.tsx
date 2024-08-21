@@ -1,6 +1,7 @@
 import React from "react";
 import { Roboto } from "next/font/google";
 import "./globals.css";
+import ClientWrapper from '@/components/ClientWrapper';
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -16,7 +17,9 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
       <body className={`${roboto.className} bg-white text-gray-900`}>
-        {children}
+        <ClientWrapper>
+          {children}
+        </ClientWrapper>
       </body>
     </html>
   );

@@ -1,21 +1,30 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import Searchbar from "@/components/SearchBar";
-import SelectedBook from "@/components/SelectedBook";
-import RecommendedBooksList from "@/components/RecommendedBooksList";
-import SuggestedBooks from "@/components/SuggestedBooks";
 import SelectedBookSkeleton from "@/components/ui/SelectedBookSkeleton";
 import RecommendedBooksListSkeleton from "@/components/ui/RecommendedBooksListSkeleton";
 import SuggestedBooksSkeleton from "@/components/ui/SuggestedBooksSkeleton";
+import { useLoading } from "@/components/ui/LoadingContext";
+
+// Lazy load the components
+const SelectedBook = lazy(() => import("@/components/SelectedBook"));
+const RecommendedBooksList = lazy(() => import("@/components/RecommendedBooksList"));
+const SuggestedBooks = lazy(() => import("@/components/SuggestedBooks"));
 
 const ForYou: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const { setIsLoading } = useLoading();
 
   useEffect(() => {
     const fetchData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      setIsLoading(false);
+      // Parallel data fetching
+      const fetchPromises = [
+        new Promise((resolve) => setTimeout(resolve, 200)), // Simulate data fetching delay
+      ];
+
+      await Promise.all(fetchPromises);
+      setIsInitialLoading(false);
     };
 
     fetchData();
@@ -28,27 +37,25 @@ const ForYou: React.FC = () => {
           <Searchbar />
         </div>
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <div
-            className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
-              isLoading ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <SelectedBookSkeleton />
-            <RecommendedBooksListSkeleton />
-            <SuggestedBooksSkeleton />
-          </div>
+        <div className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${isInitialLoading ? "opacity-100" : "opacity-0"}`}>
+          <SelectedBookSkeleton />
+          <RecommendedBooksListSkeleton />
+          <SuggestedBooksSkeleton />
+        </div>
 
-          <div
-            className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
-              isLoading ? "opacity-0" : "opacity-100"
-            }`}
-          >
+        <div className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${isInitialLoading ? "opacity-0" : "opacity-100"}`}>
+          <Suspense fallback={<SelectedBookSkeleton />}>
             <SelectedBook />
+          </Suspense>
+          
+          <Suspense fallback={<RecommendedBooksListSkeleton />}>
             <RecommendedBooksList />
+          </Suspense>
+          
+          <Suspense fallback={<SuggestedBooksSkeleton />}>
             <SuggestedBooks />
-          </div>
-        </Suspense>
+          </Suspense>
+        </div>
       </main>
     </div>
   );

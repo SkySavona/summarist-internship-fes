@@ -381,20 +381,20 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="w-full py-10 bg-[#f1f6f4]"
       >
-        <div className="max-w-[1070px] w-full mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
-            <div>
+        <div className="max-w-[1070px] w-full text-left py-5 mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-32 mb-16 pl-16">
+            <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-semibold text-[#032b41] mb-4">
                 Actions
               </h3>
               <ul>
                 <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Summarist Magazine
+                  <a href="/" className="text-sm text-[#394547]">
+                    Home
                   </a>
                 </li>
                 <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
+                  <a href="/settings" className="text-sm text-[#394547]">
                     Cancel Subscription
                   </a>
                 </li>
@@ -409,8 +409,8 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-semibold text-[#032b41] mb-4">
                 Useful Links
               </h3>
@@ -436,8 +436,8 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-semibold text-[#032b41] mb-4">
                 Company
               </h3>
@@ -463,8 +463,8 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-semibold text-[#032b41] mb-4">
                 Other
               </h3>
@@ -490,13 +490,13 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
-          <div className="text-center mt-8">
+          <motion.div variants={fadeInUp} className="text-center mt-8">
             <p className="text-[#032b41] font-medium">
               Copyright &copy; 2023 Summarist.
             </p>
-          </div>
+          </motion.div>
         </div>
       </motion.footer>
     </main>
