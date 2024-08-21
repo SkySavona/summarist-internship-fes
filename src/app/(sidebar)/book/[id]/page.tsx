@@ -8,6 +8,9 @@ import { FaStar, FaRegClock, FaBook, FaMicrophone, FaLightbulb } from "react-ico
 import Image from "next/image";
 import Searchbar from "@/components/Searchbar";
 import { motion } from "framer-motion";
+import { getFirebaseAuth } from "@/services/firebaseConfig";
+import { User } from "firebase/auth";
+import usePremiumStatus from "@/stripe/usePremiumStatus";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -75,6 +78,17 @@ const BookDetails: React.FC = () => {
   const [book, setBook] = useState<Book | null>(null);
   const [audioDuration, setAudioDuration] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const isPremium = usePremiumStatus(user);
+
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -123,7 +137,22 @@ const BookDetails: React.FC = () => {
 
   const handleReadOrListen = () => {
     if (!book) return;
-    router.push(`/player/${id}`);
+    
+    if (book.subscriptionRequired) {
+      if (!user) {
+        // User is not signed in
+        router.push('/signin');
+      } else if (!isPremium) {
+        // User is signed in but not subscribed
+        router.push('/choose-plan');
+      } else {
+        // User is signed in and subscribed
+        router.push(`/player/${id}`);
+      }
+    } else {
+      // Non-premium book, allow access
+      router.push(`/player/${id}`);
+    }
   };
 
   const handleAddToLibrary = () => {
@@ -170,6 +199,7 @@ const BookDetails: React.FC = () => {
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-1 overflow-hidden h-[100vh]">
@@ -248,14 +278,14 @@ const BookDetails: React.FC = () => {
                   className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
                 >
                   <FaBook className="mr-2" />
-                  Read
+                  {book.subscriptionRequired && !isPremium ? "Subscribe to Read" : "Read"}
                 </button>
                 <button
                   onClick={handleReadOrListen}
                   className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
                 >
                   <FaMicrophone className="mr-2" />
-                  Listen
+                  {book.subscriptionRequired && !isPremium ? "Subscribe to Listen" : "Listen"}
                 </button>
               </motion.div>
 

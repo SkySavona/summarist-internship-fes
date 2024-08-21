@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { User } from "firebase/auth";
 import { signOut } from "firebase/auth";
-import { auth } from "@/services/firebase";
+import { auth } from "@/services/firebaseConfig";
 import AuthModal from "./AuthModal";
 import { FaSpinner } from "react-icons/fa";
 
@@ -14,6 +14,7 @@ interface ButtonProps {
   user?: User | null | undefined;
   loading?: boolean;
   onLoginSuccess?: () => void;
+  onClick?: () => void; // Add this line
 }
 
 const LoginButton: React.FC<ButtonProps> = ({
@@ -28,16 +29,20 @@ const LoginButton: React.FC<ButtonProps> = ({
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
   const [showSignInPopup, setShowSignInPopup] = useState(false); // New state for sign-in popup
   const router = useRouter();
-  const pathname = usePathname(); 
+  const pathname = usePathname();
 
-  const handleSignOut = async () => {
+    const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      await signOut(auth);
-      setShowSignOutPopup(true);
-      setTimeout(() => {
-        setShowSignOutPopup(false);
-      }, 3000);
+      if (auth) { // Ensure auth is defined
+        await signOut(auth);
+        setShowSignOutPopup(true);
+        setTimeout(() => {
+          setShowSignOutPopup(false);
+        }, 3000);
+      } else {
+        console.error("Auth object is undefined");
+      }
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
@@ -76,12 +81,16 @@ const LoginButton: React.FC<ButtonProps> = ({
         onClick={handleClick}
         disabled={loading || isSigningOut}
       >
-        {loading || isSigningOut ? <FaSpinner className="animate-spin" /> : children}
+        {loading || isSigningOut ? (
+          <FaSpinner className="animate-spin" />
+        ) : (
+          children
+        )}
       </button>
-      <AuthModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onLoginSuccess={handleLoginSuccess}  
+      <AuthModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
       {showSignOutPopup && (
         <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">

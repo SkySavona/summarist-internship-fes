@@ -3,11 +3,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { FaFile, FaHandshake } from "react-icons/fa";
 import { RiPlantFill } from "react-icons/ri";
-import LoginButton from "@/components/auth/LoginButton";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { useRouter } from "next/navigation";
+import { getFirebaseAuth } from "@/services/firebaseConfig";
+import { User } from "firebase/auth";
+import { loadStripe } from "@stripe/stripe-js";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Image from "next/image";
+import AuthModal from "@/components/auth/AuthModal";
 
-// Add your animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -18,10 +23,19 @@ const stagger = {
 };
 
 interface Plan {
+  stripeProductId: any;
   id: number;
   name: string;
   description: string;
   price: string;
+  stripePriceId: string;
+}
+
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  subscriptionRequired: boolean;
 }
 
 interface PlanProps {
@@ -56,24 +70,10 @@ const Plan: React.FC<PlanProps> = ({ plan, isSelected, onSelect }) => (
 );
 
 const Plans: React.FC<{
+  plans: Plan[];
   selectedPlan: number;
   setSelectedPlan: (id: number) => void;
-}> = ({ selectedPlan, setSelectedPlan }) => {
-  const plans: Plan[] = [
-    {
-      id: 1,
-      name: "Premium Plus Yearly",
-      description: "7-day free trial included.",
-      price: "99.99/year",
-    },
-    {
-      id: 2,
-      name: "Premium Monthly",
-      description: "No trial included.",
-      price: "9.99/month",
-    },
-  ];
-
+}> = ({ plans, selectedPlan, setSelectedPlan }) => {
   return (
     <div className="max-w-3xl mx-auto">
       {plans.map((plan, index) => (
@@ -149,10 +149,54 @@ const ChoosePlan: React.FC = () => {
   const [isButtonSticky, setIsButtonSticky] = useState(false);
   const plansSectionRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [plansRef, plansInView] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [accordionRef, accordionInView] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [footerRef, footerInView] = useInView({ triggerOnce: true, threshold: 0.1 });
+  const router = useRouter();
+
+  const [plansRef, plansInView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+  const [accordionRef, accordionInView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+  const [footerRef, footerInView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  const plans: Plan[] = [
+    {
+      id: 1,
+      name: "Premium Plus Yearly",
+      description: "7-day free trial included.",
+      price: "99.99/year",
+      stripeProductId: "prod_Qh49vea9psPMhn",
+      stripePriceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr",
+    },
+    {
+      id: 2,
+      name: "Premium Monthly",
+      description: "No trial included.",
+      price: "9.99/month",
+      stripeProductId: "prod_Qh4Ak2lhk3ZvIi",
+      stripePriceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux",
+    },
+  ];
+
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -173,6 +217,96 @@ const ChoosePlan: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleSubscription = async (book?: Book) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
+
+      if (!selectedPlanData) {
+        throw new Error("Selected plan not found");
+      }
+
+      const requestBody: any = {
+        priceId: selectedPlanData.stripePriceId,
+        success_url: window.location.origin + "/confirmation",
+        cancel_url: window.location.origin + "/canceled",
+        uid: user.uid,
+      };
+
+      if (book) {
+        requestBody.bookData = {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          subscriptionRequired: true,
+        };
+      }
+
+      console.log('Request body:', requestBody); // For debugging
+
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create checkout session");
+      }
+
+      const { sessionId } = await response.json();
+
+      if (sessionId) {
+        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+        if (stripe) {
+          const { error } = await stripe.redirectToCheckout({ sessionId });
+          if (error) {
+            setError(error.message || null);
+          }
+        } else {
+          throw new Error("Failed to load Stripe");
+        }
+      } else {
+        throw new Error("Failed to create checkout session: No sessionId returned");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onLoginSuccess = () => {
+    setShowAuthModal(false);
+    handleSubscription();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  const buttonText = selectedPlan === 2 ? "Subscribe Now" : "Start your free 7-day trial";
+
+
+
+
   const accordionData: AccordionItem[] = [
     {
       question: "How does the free 7-day trial work?",
@@ -180,7 +314,8 @@ const ChoosePlan: React.FC = () => {
         "Begin your complimentary 7-day trial with a Summarist annual membership. You are under no obligation to continue your subscription, and you will only be billed when the trial period expires. With Premium access, you can learn at your own pace and as frequently as you desire, and you may terminate your subscription prior to the conclusion of the 7-day free trial.",
     },
     {
-      question: "Can I switch subscriptions from monthly to yearly, or yearly to monthly?",
+      question:
+        "Can I switch subscriptions from monthly to yearly, or yearly to monthly?",
       answer:
         "While an annual plan is active, it is not feasible to switch to a monthly plan. However, once the current month ends, transitioning from a monthly plan to an annual plan is an option.",
     },
@@ -207,7 +342,10 @@ const ChoosePlan: React.FC = () => {
           className="relative bg-blue-1 text-white py-10 pb-32 rounded-b-[250px]"
         >
           <div className="container mx-auto px-4">
-            <motion.div variants={fadeInUp} className="flex flex-col items-center text-center">
+            <motion.div
+              variants={fadeInUp}
+              className="flex flex-col items-center text-center"
+            >
               <h1 className="text-4xl font-bold mb-4 md:text-5xl">
                 Get Unlimited Access To Many Amazing Books To Read
               </h1>
@@ -216,9 +354,11 @@ const ChoosePlan: React.FC = () => {
               </p>
               <div className="relative w-full flex justify-center mb-32">
                 <div className="absolute w-full max-w-md mx-auto overflow-hidden scale-[60%] md:scale-75 rounded-t-[250px]">
-                  <img
+                  <Image
                     src="/assets/pricing-top.png"
                     alt="Pricing illustration"
+                    width={500}
+                    height={300}
                     className="w-full"
                   />
                 </div>
@@ -242,7 +382,9 @@ const ChoosePlan: React.FC = () => {
               <div className="text-center max-w-xs">
                 <FaFile className="mx-auto mb-4 text-blue-1 text-5xl" />
                 <p className="text-md text-gray-1">
-                  <span className="font-bold text-blue-1">Key ideas in few min</span>{" "}
+                  <span className="font-bold text-blue-1">
+                    Key ideas in few min
+                  </span>{" "}
                   with many books to read
                 </p>
               </div>
@@ -256,31 +398,50 @@ const ChoosePlan: React.FC = () => {
               <div className="text-center max-w-xs">
                 <FaHandshake className="mx-auto mb-4 text-blue-1 text-6xl" />
                 <p className="text-md text-gray-1">
-                  <span className="font-bold text-blue-1">Precise recommendations</span>{" "}
+                  <span className="font-bold text-blue-1">
+                    Precise recommendations
+                  </span>{" "}
                   collections curated by experts
                 </p>
               </div>
             </motion.div>
 
-            <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-center text-blue-1 mb-12">
+            <motion.h2
+              variants={fadeInUp}
+              className="text-3xl font-bold text-center text-blue-1 mb-12"
+            >
               Choose The Plan That Fits You
             </motion.h2>
             <motion.div variants={fadeInUp}>
-              <Plans selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} />
+              <Plans
+                plans={plans}
+                selectedPlan={selectedPlan}
+                setSelectedPlan={setSelectedPlan}
+              />
             </motion.div>
           </div>
           <div
             ref={buttonRef}
             className={`bg-white text-center h-28 w-full flex flex-col items-center justify-center ${
-              isButtonSticky ? "fixed bottom-0 left-0 right-0" : "absolute bottom-0 left-0 right-0"
+              isButtonSticky
+                ? "fixed bottom-0 left-0 right-0"
+                : "absolute bottom-0 left-0 right-0"
             }`}
             style={{
               zIndex: 10,
             }}
           >
-            <LoginButton>Start your free 7-day trial</LoginButton>
+            <button
+              onClick={() => handleSubscription()}
+              className="bg-green-1 text-white hover:bg-green-2 transition-colors duration-300 ease-in-out px-6 py-3 rounded-lg md text-lg font-semibold"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner /> : buttonText}
+            </button>
             <p className="mt-4 text-xs text-gray-2">
-              Cancel your trial at any time before it ends, and you won't be charged.
+              {selectedPlan === 2
+                ? "Subscribe now and start your journey!"
+                : "Cancel your trial at any time before it ends, and you won't be charged."}
             </p>
           </div>
         </motion.section>
@@ -313,12 +474,12 @@ const ChoosePlan: React.FC = () => {
               </h3>
               <ul>
                 <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Summarist Magazine
+                  <a href="/" className="text-sm text-[#394547]">
+                    Home
                   </a>
                 </li>
                 <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
+                  <a href="/settings" className="text-sm text-[#394547]">
                     Cancel Subscription
                   </a>
                 </li>
@@ -423,6 +584,14 @@ const ChoosePlan: React.FC = () => {
           </motion.div>
         </div>
       </motion.footer>
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={onLoginSuccess}
+        />
+      )}
     </div>
   );
 };

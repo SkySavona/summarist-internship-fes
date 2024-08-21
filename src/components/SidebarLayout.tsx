@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import LoginButton from "@/components/auth/LoginButton";
-import { AiOutlineHome } from "react-icons/ai";
+import AuthModal from "@/components/auth/AuthModal"; // Assuming this is the component for your modal
+import { AiOutlineHome, AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import { PiBookmarkSimple } from "react-icons/pi";
 import { LuPencilLine } from "react-icons/lu";
 import { CgSearch } from "react-icons/cg";
@@ -14,7 +15,7 @@ import { BsGear } from "react-icons/bs";
 import { IoMdHelpCircleOutline } from "react-icons/io";
 import { CiLogin } from "react-icons/ci";
 import { User } from "firebase/auth";
-import { auth } from "@/services/firebase";
+import { auth } from "@/services/firebaseConfig";
 
 const iconMap = {
   AiOutlineHome,
@@ -36,26 +37,60 @@ interface SidebarLink {
 }
 
 const sidebarLinks: ReadonlyArray<SidebarLink> = [
-  { iconName: "AiOutlineHome", route: "/for-you", label: "For You", cursorTo: "pointer" },
-  { iconName: "PiBookmarkSimple", route: "/library", label: "My Library", cursorTo: "pointer" },
-  { iconName: "LuPencilLine", route: "#", label: "Highlights", cursorTo: "not-allowed" },
-  { iconName: "CgSearch", route: "/search", label: "Search", cursorTo: "not-allowed" },
-  { iconName: "BsGear", route: "/settings", label: "Settings", cursorTo: "pointer" },
-  { iconName: "IoMdHelpCircleOutline", route: "/help", label: "Help & Support", cursorTo: "not-allowed" },
+  {
+    iconName: "AiOutlineHome",
+    route: "/for-you",
+    label: "For You",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "PiBookmarkSimple",
+    route: "/library",
+    label: "My Library",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "LuPencilLine",
+    route: "#",
+    label: "Highlights",
+    cursorTo: "not-allowed",
+  },
+  {
+    iconName: "CgSearch",
+    route: "/search",
+    label: "Search",
+    cursorTo: "not-allowed",
+  },
+  {
+    iconName: "BsGear",
+    route: "/settings",
+    label: "Settings",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "IoMdHelpCircleOutline",
+    route: "/help",
+    label: "Help & Support",
+    cursorTo: "not-allowed",
+  },
 ];
 
-const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = auth?.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
-
-    return () => unsubscribe();
+  
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   const renderLink = (
@@ -70,13 +105,14 @@ const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         href={route}
         style={{ cursor: cursorTo }}
         className={cn(
-          "flex items-center gap-3 py-2 transition-colors duration-300 ease-in-out -mx-4 px-4 hover:bg-gray-200",
+          "flex items-center gap-3 py-2 text-blue-1 transition-colors duration-300 ease-in-out -mx-4 px-4 hover:bg-gray-200",
           {
             "bg-nav-focus border-l-4 border-green-1": isActive,
           }
         )}
+        onClick={() => setIsOpen(false)}
       >
-        {Icon && <Icon className="text-xl" />}
+        {Icon && <Icon className="text-xl !text-blue-1 " />}
         <span className="text-blue-1">{label}</span>
       </Link>
     );
@@ -94,30 +130,69 @@ const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="flex">
-      <section className="left_sidebar flex flex-col h-[100vh] bg-white shadow-md w-64 py-6 px-4">
-        <div className="flex-grow">
-          <Link href="/" className="flex items-center gap-2 mb-8">
-            <Image
-              src="/assets/logo.png"
-              alt="Summarist logo"
-              width={125}
-              height={25}
-              style={{ width: "auto", height: "auto" }}
-              priority
-            />
-          </Link>
-          <nav className="flex flex-col gap-4">
-            {mainLinks.map((link) => renderLink(link))}
-          </nav>
+      <button
+        className="fixed top-4 left-4 z-30 lg:hidden w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-blue-1"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <AiOutlineMenu size={24} />
+      </button>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out lg:translate-x-0",
+          {
+            "translate-x-0": isOpen,
+            "-translate-x-full": !isOpen,
+          }
+        )}
+      >
+        <div className="flex flex-col h-full py-6 px-4">
+          <div className="flex justify-between items-center mb-8">
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/assets/logo.png"
+                alt="Summarist logo"
+                width={125}
+                height={25}
+                style={{ width: "auto", height: "auto" }}
+                priority
+              />
+            </Link>
+            <button
+              className="lg:hidden text-blue-1"
+              onClick={() => setIsOpen(false)}
+            >
+              <AiOutlineClose size={24} />
+            </button>
+          </div>
+          <div className="flex-grow ">
+            <nav className="flex flex-col gap-4 ">
+              {mainLinks.map((link) => renderLink(link))}
+            </nav>
+          </div>
+          <div className="mt-auto">
+            {footerLinks.map((link) => renderLink(link, true))}
+            <LoginButton
+              user={user}
+              loading={loading}
+              className="mt-4"
+              onClick={() => setIsModalOpen(true)}
+            >
+              {user ? "Sign Out" : "Login"}
+            </LoginButton>
+          </div>
         </div>
-        <div className="mt-auto">
-          {footerLinks.map((link) => renderLink(link, true))}
-          <LoginButton user={user} loading={loading} className="mt-4">
-            {user ? "Sign Out" : "Login"}
-          </LoginButton>
+      </aside>
+      <main className="flex-1 ml-0 lg:ml-64 transition-margin duration-300 ease-in-out relative">
+        {children}
+      </main>
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <AuthModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
         </div>
-      </section>
-      <main className="flex-1">{children}</main>
+      )}
     </div>
   );
 };
