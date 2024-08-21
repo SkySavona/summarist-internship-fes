@@ -1,19 +1,19 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import Searchbar from './Searchbar';
-import LoginButton from './auth/LoginButton';
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import Searchbar from "./SearchBar";
+import LoginButton from "./auth/LoginButton";
 
 interface LoginDefaultProps {
   message?: string;
   onLoginSuccess: () => void;
 }
 
-const LoginDefault: React.FC<LoginDefaultProps> = ({ 
+const LoginDefault: React.FC<LoginDefaultProps> = ({
   message = "Log in to your account to see your details.",
-  onLoginSuccess
+  onLoginSuccess,
 }) => {
   return (
     <>
@@ -33,18 +33,14 @@ const LoginDefault: React.FC<LoginDefaultProps> = ({
                 src="/assets/login.png"
                 alt="Login illustration"
                 layout="fill"
-                sizes='100%'
+                sizes="100%"
                 objectFit="contain"
               />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-blue-1 mb-4">
-            {message}
-          </h2>
+          <h2 className="text-2xl font-bold text-blue-1 mb-4">{message}</h2>
           <div className="flex justify-center items-center">
-            <LoginButton onLoginSuccess={onLoginSuccess}>
-              Log In
-            </LoginButton>
+            <LoginButton onLoginSuccess={onLoginSuccess}>Log In</LoginButton>
           </div>
         </motion.div>
       </div>

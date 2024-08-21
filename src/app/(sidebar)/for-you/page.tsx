@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Searchbar from "@/components/Searchbar";
+import React, { useState, useEffect, Suspense } from "react";
+import Searchbar from "@/components/SearchBar";
 import SelectedBook from "@/components/SelectedBook";
 import RecommendedBooksList from "@/components/RecommendedBooksList";
 import SuggestedBooks from "@/components/SuggestedBooks";
@@ -28,25 +28,27 @@ const ForYou: React.FC = () => {
           <Searchbar />
         </div>
 
-        <div
-          className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
-            isLoading ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <SelectedBookSkeleton />
-          <RecommendedBooksListSkeleton />
-          <SuggestedBooksSkeleton />
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <div
+            className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
+              isLoading ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <SelectedBookSkeleton />
+            <RecommendedBooksListSkeleton />
+            <SuggestedBooksSkeleton />
+          </div>
 
-        <div
-          className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
-            isLoading ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          <SelectedBook />
-          <RecommendedBooksList />
-          <SuggestedBooks />
-        </div>
+          <div
+            className={`absolute top-14 left-0 w-full px-4 py-6 transition-opacity duration-500 ease-in-out z-10 ${
+              isLoading ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <SelectedBook />
+            <RecommendedBooksList />
+            <SuggestedBooks />
+          </div>
+        </Suspense>
       </main>
     </div>
   );

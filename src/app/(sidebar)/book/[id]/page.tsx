@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Book } from "@/types/index";
 import { PiBookmarkSimple } from "react-icons/pi";
-import { FaStar, FaRegClock, FaBook, FaMicrophone, FaLightbulb } from "react-icons/fa";
+import {
+  FaStar,
+  FaRegClock,
+  FaBook,
+  FaMicrophone,
+  FaLightbulb,
+} from "react-icons/fa";
 import Image from "next/image";
-import Searchbar from "@/components/Searchbar";
+import Searchbar from "@/components/SearchBar";
 import { motion } from "framer-motion";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import { User } from "firebase/auth";
@@ -20,7 +26,6 @@ const fadeInUp = {
 const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
-
 
 const SkeletonBookDetails: React.FC = () => {
   return (
@@ -92,7 +97,7 @@ const BookDetails: React.FC = () => {
 
   useEffect(() => {
     const fetchBookDetails = async () => {
-      if (typeof id !== 'string') return;
+      if (typeof id !== "string") return;
 
       try {
         const response = await fetch(
@@ -137,14 +142,14 @@ const BookDetails: React.FC = () => {
 
   const handleReadOrListen = () => {
     if (!book) return;
-    
+
     if (book.subscriptionRequired) {
       if (!user) {
         // User is not signed in
-        router.push('/signin');
+        router.push("/signin");
       } else if (!isPremium) {
         // User is signed in but not subscribed
-        router.push('/choose-plan');
+        router.push("/choose-plan");
       } else {
         // User is signed in and subscribed
         router.push(`/player/${id}`);
@@ -157,26 +162,29 @@ const BookDetails: React.FC = () => {
 
   const handleAddToLibrary = () => {
     if (!book) return;
-  
+
     // Retrieve the existing library from local storage
-    const existingLibrary = JSON.parse(localStorage.getItem('myLibrary') || '[]');
-  
+    const existingLibrary = JSON.parse(
+      localStorage.getItem("myLibrary") || "[]"
+    );
+
     // Check if the book is already in the library
-    const isAlreadyInLibrary = existingLibrary.some((savedBook: Book) => savedBook.id === book.id);
-  
+    const isAlreadyInLibrary = existingLibrary.some(
+      (savedBook: Book) => savedBook.id === book.id
+    );
+
     if (!isAlreadyInLibrary) {
       // Add the new book to the library
       const updatedLibrary = [...existingLibrary, book];
-  
+
       // Save the updated library to local storage
-      localStorage.setItem('myLibrary', JSON.stringify(updatedLibrary));
-  
+      localStorage.setItem("myLibrary", JSON.stringify(updatedLibrary));
+
       alert("Book added to your library!");
     } else {
       alert("Book is already in your library!");
     }
   };
-
 
   if (!book && !error) {
     return <SkeletonBookDetails />;
@@ -194,163 +202,171 @@ const BookDetails: React.FC = () => {
   if (!book) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Book Not Found</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+          Book Not Found
+        </h1>
         <p className="text-gray-600">The requested book could not be found.</p>
       </div>
     );
   }
 
-
   return (
-    <div className="flex flex-1 overflow-hidden h-[100vh]">
-      <main className="flex-1 overflow-y-auto p-4">
-        <motion.div initial="hidden" animate="visible" variants={stagger}>
-          <div className="pr-2 pb-4 border-b w-full border-gray-200">
-            <Searchbar />
-          </div>
-        </motion.div>
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={stagger}
-          className="max-w-6xl mx-auto p-8"
-        >
-          <motion.div
-            variants={fadeInUp}
-            className="flex flex-col-reverse md:flex-row justify-between items-start md:items-start"
-          >
-            <div className="md:w-2/3">
-              <motion.h1
-                variants={fadeInUp}
-                className="text-blue-1 text-3xl md:text-4xl font-bold mt-4 md:mt-0"
-              >
-                {book.title}
-              </motion.h1>
-              <motion.p
-                variants={fadeInUp}
-                className="text-blue-1 text-md md:text-lg mt-2"
-              >
-                {book.author}
-              </motion.p>
-              <motion.p
-                variants={fadeInUp}
-                className="text-gray-2 text-sm md:text-md mt-1 border-b pb-4 border-gray-300"
-              >
-                {book.subTitle}
-              </motion.p>
-
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-wrap mt-4 text-blue-1 text-xs md:text-sm space-x-6"
-              >
-                <div className="flex items-center">
-                  <FaStar className="text-yellow-500 mr-2" />
-                  <span>
-                    {book.averageRating.toFixed(1)} ({book.totalRating} ratings)
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <FaRegClock className="mr-2" />
-                  <span>{audioDuration || "Loading duration..."}</span>
-                </div>
-              </motion.div>
-
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-wrap mt-4 text-xs md:text-sm space-x-6 border-b pb-4 border-gray-300"
-              >
-                <div className="flex text-blue-1 items-center">
-                  <FaMicrophone className="mr-2" />
-                  <span>{book.type}</span>
-                </div>
-                <div className="flex text-blue-1 items-center">
-                  <FaLightbulb className="mr-2" />
-                  <span>{book.keyIdeas.length} Key ideas</span>
-                </div>
-              </motion.div>
-
-              <motion.div
-                variants={fadeInUp}
-                className="flex items-center mt-8 space-x-4"
-              >
-                <button
-                  onClick={handleReadOrListen}
-                  className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
-                >
-                  <FaBook className="mr-2" />
-                  {book.subscriptionRequired && !isPremium ? "Subscribe to Read" : "Read"}
-                </button>
-                <button
-                  onClick={handleReadOrListen}
-                  className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
-                >
-                  <FaMicrophone className="mr-2" />
-                  {book.subscriptionRequired && !isPremium ? "Subscribe to Listen" : "Listen"}
-                </button>
-              </motion.div>
-
-              <motion.div variants={fadeInUp} className="flex mt-6">
-                <button
-                  onClick={handleAddToLibrary}
-                  className="text-blue-2 flex items-center text-sm md:text-base"
-                >
-                  <PiBookmarkSimple className="mr-2" />
-                  Add title to My Library
-                </button>
-              </motion.div>
-
-              <motion.div
-                variants={fadeInUp}
-                className="mt-8 border-b pb-4 border-gray-300"
-              >
-                <h2 className="text-lg md:text-xl font-semibold text-blue-1">
-                  What's It About?
-                </h2>
-                <div className="flex flex-wrap mt-2 space-x-2">
-                  {book.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-gray-200 text-blue-1 px-3 py-1 mt-4 rounded-md text-xs md:text-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-4 text-gray-1 text-sm md:text-base">
-                  {book.bookDescription}
-                </p>
-              </motion.div>
-
-              <motion.div variants={fadeInUp} className="mt-8 ">
-                <h2 className="text-lg md:text-xl font-semibold text-blue-1">
-                  About The Author
-                </h2>
-                <p className="mt-4 text-gray-1 text-sm md:text-base">
-                  {book.authorDescription}
-                </p>
-              </motion.div>
+    <Suspense fallback={<SkeletonBookDetails />}>
+      <div className="flex flex-1 overflow-hidden h-[100vh]">
+        <main className="flex-1 overflow-y-auto p-4">
+          <motion.div initial="hidden" animate="visible" variants={stagger}>
+            <div className="pr-2 pb-4 border-b w-full border-gray-200">
+              <Searchbar />
             </div>
-
+          </motion.div>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={stagger}
+            className="max-w-6xl mx-auto p-8"
+          >
             <motion.div
               variants={fadeInUp}
-              className="relative w-full h-80 mt-4 md:mt-0 md:w-80 md:h-80"
+              className="flex flex-col-reverse md:flex-row justify-between items-start md:items-start"
             >
-              <Image
-                src={book.imageLink}
-                alt={book.title}
-                fill
-                className="object-cover rounded-lg shadow-lg"
-              />
-              {book.subscriptionRequired && (
-                <div className="absolute top-2 right-2 bg-blue-1 text-white text-xs px-2 py-1 rounded-full">
-                  Premium
-                </div>
-              )}
+              <div className="md:w-2/3">
+                <motion.h1
+                  variants={fadeInUp}
+                  className="text-blue-1 text-3xl md:text-4xl font-bold mt-4 md:mt-0"
+                >
+                  {book.title}
+                </motion.h1>
+                <motion.p
+                  variants={fadeInUp}
+                  className="text-blue-1 text-md md:text-lg mt-2"
+                >
+                  {book.author}
+                </motion.p>
+                <motion.p
+                  variants={fadeInUp}
+                  className="text-gray-2 text-sm md:text-md mt-1 border-b pb-4 border-gray-300"
+                >
+                  {book.subTitle}
+                </motion.p>
+
+                <motion.div
+                  variants={fadeInUp}
+                  className="flex flex-wrap mt-4 text-blue-1 text-xs md:text-sm space-x-6"
+                >
+                  <div className="flex items-center">
+                    <FaStar className="text-yellow-500 mr-2" />
+                    <span>
+                      {book.averageRating.toFixed(1)} (
+                      {book.totalRating} ratings)
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <FaRegClock className="mr-2" />
+                    <span>{audioDuration || "Loading duration..."}</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={fadeInUp}
+                  className="flex flex-wrap mt-4 text-xs md:text-sm space-x-6 border-b pb-4 border-gray-300"
+                >
+                  <div className="flex text-blue-1 items-center">
+                    <FaMicrophone className="mr-2" />
+                    <span>{book.type}</span>
+                  </div>
+                  <div className="flex text-blue-1 items-center">
+                    <FaLightbulb className="mr-2" />
+                    <span>{book.keyIdeas.length} Key ideas</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={fadeInUp}
+                  className="flex items-center mt-8 space-x-4"
+                >
+                  <button
+                    onClick={handleReadOrListen}
+                    className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
+                  >
+                    <FaBook className="mr-2" />
+                    {book.subscriptionRequired && !isPremium
+                      ? "Subscribe to Read"
+                      : "Read"}
+                  </button>
+                  <button
+                    onClick={handleReadOrListen}
+                    className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
+                  >
+                    <FaMicrophone className="mr-2" />
+                    {book.subscriptionRequired && !isPremium
+                      ? "Subscribe to Listen"
+                      : "Listen"}
+                  </button>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="flex mt-6">
+                  <button
+                    onClick={handleAddToLibrary}
+                    className="text-blue-2 flex items-center text-sm md:text-base"
+                  >
+                    <PiBookmarkSimple className="mr-2" />
+                    Add title to My Library
+                  </button>
+                </motion.div>
+
+                <motion.div
+                  variants={fadeInUp}
+                  className="mt-8 border-b pb-4 border-gray-300"
+                >
+                  <h2 className="text-lg md:text-xl font-semibold text-blue-1">
+                    What's It About?
+                  </h2>
+                  <div className="flex flex-wrap mt-2 space-x-2">
+                    {book.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-gray-200 text-blue-1 px-3 py-1 mt-4 rounded-md text-xs md:text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-gray-1 text-sm md:text-base">
+                    {book.bookDescription}
+                  </p>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="mt-8 ">
+                  <h2 className="text-lg md:text-xl font-semibold text-blue-1">
+                    About The Author
+                  </h2>
+                  <p className="mt-4 text-gray-1 text-sm md:text-base">
+                    {book.authorDescription}
+                  </p>
+                </motion.div>
+              </div>
+
+              <motion.div
+                variants={fadeInUp}
+                className="relative w-full h-80 mt-4 md:mt-0 md:w-80 md:h-80"
+              >
+                <Image
+                  src={book.imageLink}
+                  alt={book.title}
+                  fill
+                  className="object-cover rounded-lg shadow-lg"
+                />
+                {book.subscriptionRequired && (
+                  <div className="absolute top-2 right-2 bg-blue-1 text-white text-xs px-2 py-1 rounded-full">
+                    Premium
+                  </div>
+                )}
+              </motion.div>
             </motion.div>
           </motion.div>
-        </motion.div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </Suspense>
   );
 };
 

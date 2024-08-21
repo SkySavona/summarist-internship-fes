@@ -5,32 +5,29 @@ import { BsStarFill, BsStarHalf } from "react-icons/bs";
 import { BiCrown } from "react-icons/bi";
 import { RiLeafLine } from "react-icons/ri";
 import LoginButton from "@/components/auth/LoginButton";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import Image from "next/image";
 
 export default function Home() {
   const [highlightIndex1, setHighlightIndex1] = useState(0);
   const [highlightIndex2, setHighlightIndex2] = useState(0);
-
-  const highlights1 = useMemo(() => [
+  const highlights1 = [
     "Enhance your knowledge",
     "Achieve greater success",
     "Improve your health",
     "Develop better parenting skills",
     "Increase happiness",
     "Be the best version of yourself!",
-  ], []);
-
-  const highlights2 = useMemo(() => [
+  ];
+  const highlights2 = [
     "Expand your learning",
     "Accomplish your goals",
     "Strengthen your vitality",
     "Become a better caregiver",
     "Improve your mood",
     "Maximize your abilities",
-  ], []);
+  ];
 
   const [landingRef, landingInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [featuresRef, featuresInView] = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -51,7 +48,7 @@ export default function Home() {
       clearInterval(intervalId1);
       clearInterval(intervalId2);
     };
-  }, [highlights1, highlights2]);
+  }, [highlights1.length, highlights2.length]);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -72,15 +69,10 @@ export default function Home() {
       >
         <div className="flex justify-between items-center max-w-[1070px] w-full h-full mx-auto px-6">
           <figure className="max-w-[200px]">
-            <Image
-              src="/assets/logo.png"
+            <img
+              className="w-full h-full"
+              src="./assets/logo.png"
               alt="logo"
-              width={200}
-              height={67}  
-              style={{
-                width: '100%',
-                height: 'auto',
-              }}
             />
           </figure>
           <ul className="flex gap-6">
@@ -129,11 +121,9 @@ export default function Home() {
               variants={fadeInUp}
               className="mt-8 md:mt-0 md:w-1/2 flex justify-end"
             >
-              <Image
-                src="/assets/landing.png"
+              <img
+                src="./assets/landing.png"
                 alt="landing"
-                width={400}
-                height={300}  // Adjust this based on your image's aspect ratio
                 className="w-full max-w-[400px]"
               />
             </motion.figure>
@@ -341,7 +331,7 @@ export default function Home() {
                 <p className="text-[#394547] leading-relaxed" dangerouslySetInnerHTML={{ __html: review.content }}></p>
               </motion.div>
             ))}
-            <motion.div variants={fadeInUp} className="flex justify-center">
+         <motion.div variants={fadeInUp} className="flex justify-center">
               <LoginButton>Login</LoginButton>
             </motion.div>
           </div>
@@ -391,123 +381,123 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="w-full py-10 bg-[#f1f6f4]"
       >
-        <div className="max-w-[1070px] w-full text-left py-5  mx-auto">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-32 mb-16 pl-16">
-      <div>
-        <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-          Actions
-        </h3>
-        <ul>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Summarist Magazine
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Cancel Subscription
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Help
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm text-[#394547]">
-              Contact us
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-          Useful Links
-        </h3>
-        <ul>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Pricing
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Summarist Business
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Gift Cards
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm text-[#394547]">
-              Authors & Publishers
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-          Company
-        </h3>
-        <ul>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              About
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Careers
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Partners
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm text-[#394547]">
-              Code of Conduct
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-          Other
-        </h3>
-        <ul>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Sitemap
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Legal Notice
-            </a>
-          </li>
-          <li className="mb-3">
-            <a href="#" className="text-sm text-[#394547]">
-              Terms of Service
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm text-[#394547]">
-              Privacy Policies
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div className="text-center mt-8">
-      <p className="text-[#032b41] font-medium">
-        Copyright &copy; 2023 Summarist.
-      </p>
-    </div>
-  </div>
+        <div className="max-w-[1070px] w-full mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+            <div>
+              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                Actions
+              </h3>
+              <ul>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Summarist Magazine
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Cancel Subscription
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Help
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-[#394547]">
+                    Contact us
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                Useful Links
+              </h3>
+              <ul>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Pricing
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Summarist Business
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Gift Cards
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-[#394547]">
+                    Authors & Publishers
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                Company
+              </h3>
+              <ul>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    About
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Careers
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Partners
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-[#394547]">
+                    Code of Conduct
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                Other
+              </h3>
+              <ul>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Sitemap
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Legal Notice
+                  </a>
+                </li>
+                <li className="mb-3">
+                  <a href="#" className="text-sm text-[#394547]">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-[#394547]">
+                    Privacy Policies
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-[#032b41] font-medium">
+              Copyright &copy; 2023 Summarist.
+            </p>
+          </div>
+        </div>
       </motion.footer>
     </main>
   );

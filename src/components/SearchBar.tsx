@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -131,3 +132,10 @@ const SearchBar: React.FC = () => {
 };
 
 export default SearchBar;
+
+
+
+
+
+
+
