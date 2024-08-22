@@ -26,9 +26,14 @@ const initializeFirebase = (): void => {
       db = getFirestore(app);
       functions = getFunctions(app);
 
+      if (!functions) {
+        throw new Error("Firebase functions failed to initialize");
+      }
+
       console.log("Firebase initialized successfully");
     } catch (error) {
       console.error("Error initializing Firebase:", error);
+      throw error; // Ensure to fail fast in case of an initialization error
     }
   } else {
     app = getApp();
@@ -38,7 +43,7 @@ const initializeFirebase = (): void => {
   }
 };
 
-// Ensure Firebase is initialized before exporting services
+// Initialize Firebase once at the application start
 initializeFirebase();
 
 if (!functions) {

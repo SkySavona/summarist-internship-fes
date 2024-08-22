@@ -8,7 +8,6 @@ import { Book } from "@/types/index";
 import PlayerPageSidebar from "@/components/PlayerPageSidebar";
 import Searchbar from "@/components/SearchBar";
 import { motion } from "framer-motion";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { FaCheck } from "react-icons/fa";
 
 const fadeInUp = {
@@ -129,23 +128,23 @@ const PlayerPage: React.FC = () => {
     }
   };
 
-  if (!book) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <AudioProvider>
       <div className="flex h-screen relative">
         <PlayerPageSidebar onFontSizeChange={setFontSize} />
         <div className="flex flex-col w-full h-full">
-          <PlayerContent
-            book={book}
-            fontSize={fontSize}
-            onMarkAsFinished={handleMarkAsFinished}
-          />
-          <div className="sticky bottom-0 left-0 w-full bg-white z-10">
-            <AudioPlayer book={book} />
-          </div>
+          {book && (
+            <PlayerContent
+              book={book}
+              fontSize={fontSize}
+              onMarkAsFinished={handleMarkAsFinished}
+            />
+          )}
+          {book && (
+            <div className="sticky bottom-0 left-0 w-full bg-white z-10">
+              <AudioPlayer book={book} />
+            </div>
+          )}
         </div>
       </div>
     </AudioProvider>
