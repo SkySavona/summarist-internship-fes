@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter, usePathname } from "next/navigation"; // Import usePathname
 import { User } from "firebase/auth";
 import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { auth } from "@/services/firebase";
 import AuthModal from "./AuthModal";
 import { FaSpinner } from "react-icons/fa";
@@ -27,6 +27,7 @@ const LoginButton: React.FC<ButtonProps> = ({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
   const router = useRouter();
+  const pathname = usePathname(); // Get the current pathname
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -35,7 +36,6 @@ const LoginButton: React.FC<ButtonProps> = ({
       setShowSignOutPopup(true);
       setTimeout(() => {
         setShowSignOutPopup(false);
-        router.push('/'); // Redirect to home page after sign out
       }, 3000);
     } catch (error) {
       console.error("Error signing out:", error);
@@ -49,7 +49,10 @@ const LoginButton: React.FC<ButtonProps> = ({
     if (onLoginSuccess) {
       onLoginSuccess();
     }
-    router.push('/for-you'); // Always redirect to /for-you after successful login
+
+    if (pathname === "/") {
+      router.push("/for-you");
+    }
   };
 
   const handleClick = () => {
@@ -75,7 +78,7 @@ const LoginButton: React.FC<ButtonProps> = ({
         onLoginSuccess={handleLoginSuccess}  
       />
       {showSignOutPopup && (
-        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg">
+        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
           Successfully signed out!
         </div>
       )}
