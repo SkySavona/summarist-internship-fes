@@ -36,12 +36,12 @@ interface SidebarLink {
 }
 
 const sidebarLinks: ReadonlyArray<SidebarLink> = [
-  { iconName: "AiOutlineHome", route: "/", label: "Home", cursorTo: "pointer" },
+  { iconName: "AiOutlineHome", route: "/for-you", label: "For You", cursorTo: "pointer" },
   { iconName: "PiBookmarkSimple", route: "/library", label: "My Library", cursorTo: "pointer" },
-  { iconName: "LuPencilLine", route: "/for-you", label: "For You", cursorTo: "pointer" },
-  { iconName: "CgSearch", route: "/search", label: "Search", cursorTo: "pointer" },
+  { iconName: "LuPencilLine", route: "#", label: "Highlights", cursorTo: "not-allowed" },
+  { iconName: "CgSearch", route: "/search", label: "Search", cursorTo: "not-allowed" },
   { iconName: "BsGear", route: "/settings", label: "Settings", cursorTo: "pointer" },
-  { iconName: "IoMdHelpCircleOutline", route: "/help", label: "Help & Support", cursorTo: "pointer" },
+  { iconName: "IoMdHelpCircleOutline", route: "#", label: "Help & Support", cursorTo: "not-allowed" },
 ];
 
 const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: string) => void }) => {

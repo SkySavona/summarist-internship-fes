@@ -173,7 +173,7 @@ const BookDetails: React.FC = () => {
 
   return (
     <div className="flex flex-1 overflow-hidden h-[100vh]">
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-4">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
           <div className="pr-2 pb-4 border-b w-full border-gray-200">
             <Searchbar />
