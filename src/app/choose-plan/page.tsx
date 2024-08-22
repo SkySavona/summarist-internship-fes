@@ -1,5 +1,5 @@
-
 "use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { FaFile, FaHandshake } from "react-icons/fa";
@@ -218,40 +218,40 @@ const ChoosePlan: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSubscription = async (book?: Book) => {
+  const handleSubscription = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-
+  
       const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
-
+  
       if (!selectedPlanData) {
         throw new Error("Selected plan not found");
       }
-
+  
+      // Attempt to retrieve book data from localStorage
+      const bookData = JSON.parse(localStorage.getItem('selectedBook') || '{}');
+  
       const requestBody: any = {
         priceId: selectedPlanData.stripePriceId,
         success_url: window.location.origin + "/confirmation",
         cancel_url: window.location.origin + "/canceled",
         uid: user.uid,
       };
-
-      if (book) {
+  
+      // Only include bookData if it exists and has necessary properties
+      if (bookData && bookData.id && bookData.title) {
         requestBody.bookData = {
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          subscriptionRequired: true,
+          id: bookData.id,
+          title: bookData.title,
         };
       }
-
-      console.log('Request body:', requestBody); // For debugging
-
+  
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: {
@@ -259,29 +259,24 @@ const ChoosePlan: React.FC = () => {
         },
         body: JSON.stringify(requestBody),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to create checkout session");
       }
-
+  
       const { sessionId } = await response.json();
-
-      if (sessionId) {
-        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-        if (stripe) {
-          const { error } = await stripe.redirectToCheckout({ sessionId });
-          if (error) {
-            setError(error.message || null);
-          }
-        } else {
-          throw new Error("Failed to load Stripe");
+  
+      const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+      if (stripe) {
+        const { error } = await stripe.redirectToCheckout({ sessionId });
+        if (error) {
+          setError(error.message || null);
         }
       } else {
-        throw new Error("Failed to create checkout session: No sessionId returned");
+        throw new Error("Failed to load Stripe");
       }
     } catch (error) {
-      console.error("Error creating checkout session:", error);
       setError(
         error instanceof Error ? error.message : "An unknown error occurred"
       );
@@ -304,9 +299,6 @@ const ChoosePlan: React.FC = () => {
   }
 
   const buttonText = selectedPlan === 2 ? "Subscribe Now" : "Start your free 7-day trial";
-
-
-
 
   const accordionData: AccordionItem[] = [
     {
@@ -426,175 +418,174 @@ const ChoosePlan: React.FC = () => {
             className={`bg-white text-center h-28 w-full flex flex-col items-center justify-center ${
               isButtonSticky
                 ? "fixed bottom-0 left-0 right-0"
-                : "absolute bottom-0 left-0 right-0"
-            }`}
-            style={{
-              zIndex: 10,
-            }}
-          >
-            <button
-              onClick={() => handleSubscription()}
-              className="bg-green-1 text-white hover:bg-green-2 transition-colors duration-300 ease-in-out px-6 py-3 rounded-lg md text-lg font-semibold"
-              disabled={loading}
+                : "absolute bottom-0 left-0 right-0"}`}
+                style={{
+                  zIndex: 10,
+                }}
+              >
+                <button
+                  onClick={() => handleSubscription()}
+                  className="bg-green-1 text-white hover:bg-green-2 transition-colors duration-300 ease-in-out px-6 py-3 rounded-lg md text-lg font-semibold"
+                  disabled={loading}
+                >
+                  {loading ? <LoadingSpinner /> : buttonText}
+                </button>
+                <p className="mt-4 text-xs text-gray-2">
+                  {selectedPlan === 2
+                    ? "Subscribe now and start your journey!"
+                    : "Cancel your trial at any time before it ends, and you won't be charged."}
+                </p>
+              </div>
+            </motion.section>
+    
+            <motion.section
+              ref={accordionRef}
+              initial="hidden"
+              animate={accordionInView ? "visible" : "hidden"}
+              variants={stagger}
+              className="py-20"
             >
-              {loading ? <LoadingSpinner /> : buttonText}
-            </button>
-            <p className="mt-4 text-xs text-gray-2">
-              {selectedPlan === 2
-                ? "Subscribe now and start your journey!"
-                : "Cancel your trial at any time before it ends, and you won't be charged."}
-            </p>
-          </div>
-        </motion.section>
-
-        <motion.section
-          ref={accordionRef}
-          initial="hidden"
-          animate={accordionInView ? "visible" : "hidden"}
-          variants={stagger}
-          className="py-20"
-        >
-          <div className="container mx-auto px-4">
-            <Accordion items={accordionData} />
-          </div>
-        </motion.section>
-      </main>
-
-      <motion.footer
-        ref={footerRef}
-        initial="hidden"
-        animate={footerInView ? "visible" : "hidden"}
-        variants={stagger}
-        className="bg-[#f1f6f4] w-full py-10"
-      >
-        <div className="max-w-[1070px] w-full text-left py-5 mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-32 mb-16 pl-16">
-            <motion.div variants={fadeInUp}>
-              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-                Actions
-              </h3>
-              <ul>
-                <li className="mb-3">
-                  <a href="/" className="text-sm text-[#394547]">
-                    Home
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="/settings" className="text-sm text-[#394547]">
-                    Cancel Subscription
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Help
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-sm text-[#394547]">
-                    Contact us
-                  </a>
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-                Useful Links
-              </h3>
-              <ul>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Pricing
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Summarist Business
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Gift Cards
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-sm text-[#394547]">
-                    Authors & Publishers
-                  </a>
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-                Company
-              </h3>
-              <ul>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    About
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Careers
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Partners
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-sm text-[#394547]">
-                    Code of Conduct
-                  </a>
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <h3 className="text-lg font-semibold text-[#032b41] mb-4">
-                Other
-              </h3>
-              <ul>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Sitemap
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Legal Notice
-                  </a>
-                </li>
-                <li className="mb-3">
-                  <a href="#" className="text-sm text-[#394547]">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-sm text-[#394547]">
-                    Privacy Policies
-                  </a>
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-          <motion.div variants={fadeInUp} className="text-center mt-8">
-            <p className="text-[#032b41] font-medium">
-              Copyright &copy; 2023 Summarist.
-            </p>
-          </motion.div>
+              <div className="container mx-auto px-4">
+                <Accordion items={accordionData} />
+              </div>
+            </motion.section>
+          </main>
+    
+          <motion.footer
+            ref={footerRef}
+            initial="hidden"
+            animate={footerInView ? "visible" : "hidden"}
+            variants={stagger}
+            className="bg-[#f1f6f4] w-full py-10"
+          >
+            <div className="max-w-[1070px] w-full text-left py-5 mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-32 mb-16 pl-16">
+                <motion.div variants={fadeInUp}>
+                  <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                    Actions
+                  </h3>
+                  <ul>
+                    <li className="mb-3">
+                      <a href="/" className="text-sm text-[#394547]">
+                        Home
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="/settings" className="text-sm text-[#394547]">
+                        Cancel Subscription
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Help
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="text-sm text-[#394547]">
+                        Contact us
+                      </a>
+                    </li>
+                  </ul>
+                </motion.div>
+                <motion.div variants={fadeInUp}>
+                  <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                    Useful Links
+                  </h3>
+                  <ul>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Pricing
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Summarist Business
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Gift Cards
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="text-sm text-[#394547]">
+                        Authors & Publishers
+                      </a>
+                    </li>
+                  </ul>
+                </motion.div>
+                <motion.div variants={fadeInUp}>
+                  <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                    Company
+                  </h3>
+                  <ul>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        About
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Careers
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Partners
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="text-sm text-[#394547]">
+                        Code of Conduct
+                      </a>
+                    </li>
+                  </ul>
+                </motion.div>
+                <motion.div variants={fadeInUp}>
+                  <h3 className="text-lg font-semibold text-[#032b41] mb-4">
+                    Other
+                  </h3>
+                  <ul>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Sitemap
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Legal Notice
+                      </a>
+                    </li>
+                    <li className="mb-3">
+                      <a href="#" className="text-sm text-[#394547]">
+                        Terms of Service
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="text-sm text-[#394547]">
+                        Privacy Policies
+                      </a>
+                    </li>
+                  </ul>
+                </motion.div>
+              </div>
+              <motion.div variants={fadeInUp} className="text-center mt-8">
+                <p className="text-[#032b41] font-medium">
+                  Copyright &copy; 2023 Summarist.
+                </p>
+              </motion.div>
+            </div>
+          </motion.footer>
+    
+          {showAuthModal && (
+            <AuthModal
+              isOpen={showAuthModal}
+              onClose={() => setShowAuthModal(false)}
+              onLoginSuccess={onLoginSuccess}
+            />
+          )}
         </div>
-      </motion.footer>
-
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onLoginSuccess={onLoginSuccess}
-        />
-      )}
-    </div>
-  );
-};
-
-export default ChoosePlan;
+      );
+    };
+    
+    export default ChoosePlan;

@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import LoginButton from "@/components/auth/LoginButton";
-import AuthModal from "@/components/auth/AuthModal"; // Assuming this is the component for your modal
 import { AiOutlineHome, AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import { PiBookmarkSimple } from "react-icons/pi";
 import { LuPencilLine } from "react-icons/lu";
@@ -45,7 +44,7 @@ const sidebarLinks: ReadonlyArray<SidebarLink> = [
   },
   {
     iconName: "PiBookmarkSimple",
-    route: "/library",
+    route: "/my-library",
     label: "My Library",
     cursorTo: "pointer",
   },
@@ -75,21 +74,26 @@ const sidebarLinks: ReadonlyArray<SidebarLink> = [
   },
 ];
 
-const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({
+interface SidebarLayoutProps {
+  children: React.ReactNode;
+  onLoginClick?: () => void;
+}
+
+const SidebarLayout: React.FC<SidebarLayoutProps> = ({
   children,
+  onLoginClick,
 }) => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth?.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
-  
+
     return () => unsubscribe && unsubscribe();
   }, []);
 
@@ -164,8 +168,8 @@ const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({
               <AiOutlineClose size={24} />
             </button>
           </div>
-          <div className="flex-grow ">
-            <nav className="flex flex-col gap-4 ">
+          <div className="flex-grow">
+            <nav className="flex flex-col gap-4">
               {mainLinks.map((link) => renderLink(link))}
             </nav>
           </div>
@@ -175,7 +179,7 @@ const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({
               user={user}
               loading={loading}
               className="mt-4"
-              onClick={() => setIsModalOpen(true)}
+              onClick={onLoginClick}
             >
               {user ? "Sign Out" : "Login"}
             </LoginButton>
@@ -185,14 +189,6 @@ const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({
       <main className="flex-1 ml-0 lg:ml-64 transition-margin duration-300 ease-in-out relative">
         {children}
       </main>
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <AuthModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-          />
-        </div>
-      )}
     </div>
   );
 };

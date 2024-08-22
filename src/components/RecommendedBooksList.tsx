@@ -13,7 +13,6 @@ const RecommendedBooksList: React.FC = () => {
         const data: Book[] = await response.json();
         setRecommendedBooks(data.slice(0, 5)); 
       } catch (error) {
-        console.error("Error fetching recommended books:", error);
       }
     };
 

@@ -5,16 +5,30 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
 
+async function updateUserDocument(firestore: any, uid: string, data: any) {
+  const userRef = firestore.collection('users').doc(uid);
+  await userRef.set(data, { merge: true });
+}
+
+async function createLibraryDocument(firestore: any, uid: string, bookData: any) {
+  const libraryRef = firestore.collection('library').doc(uid);
+  await libraryRef.set({
+    books: [{
+      bookId: bookData.id,
+      title: bookData.title,
+      subscriptionRequired: true,
+      addedAt: FieldValue.serverTimestamp()
+    }]
+  }, { merge: true });
+}
+
 export async function POST(req: Request) {
   try {
-    const { priceId, success_url, cancel_url, uid } = await req.json();
+    const { priceId, success_url, cancel_url, uid, bookData } = await req.json();
 
     if (!priceId || !success_url || !uid) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
-
-    // Capture the referrer URL and provide a fallback if it's null
-    const referrerUrl = req.headers.get('referer') || cancel_url;
 
     const firestore = getFirestore(getFirebaseAdmin());
 
@@ -38,7 +52,7 @@ export async function POST(req: Request) {
       customerId = customer.id;
 
       // Update user document with Stripe customer ID
-      await firestore.collection('users').doc(uid).update({ stripeCustomerId: customerId });
+      await updateUserDocument(firestore, uid, { stripeCustomerId: customerId });
     }
 
     // Create Stripe Checkout session
@@ -48,28 +62,39 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url,
-      cancel_url: referrerUrl || undefined, // Ensure cancel_url is a string or undefined
+      cancel_url,
+      metadata: bookData ? { bookId: bookData.id, bookTitle: bookData.title } : undefined,
     });
 
-    // Create a checkout session document in Firestore
-    await firestore
-      .collection('users')
-      .doc(uid)
-      .collection('checkout_sessions')
-      .add({
+    // Determine the role based on the subscription
+    let firebaseRole = "Basic"; // Default role
+    if (priceId === "price_1Ppg1XRpLrmHfjrMuDkIbZGr" || priceId === "price_1Ppg2VRpLrmHfjrMN3kq31Ux") {  // Check for both Premium plans
+      firebaseRole = "Premium";
+    }
+
+    // Update user document with session information, subscription status, and role
+    await updateUserDocument(firestore, uid, {
+      latestCheckoutSession: {
         sessionId: session.id,
         created: FieldValue.serverTimestamp(),
         mode: session.mode,
         priceId,
         success_url,
-        cancel_url: referrerUrl || undefined,
-      });
+        cancel_url,
+      },
+      subscriptionStatus: 'active', // Set subscription status to active
+      subscriptionPriceId: priceId, // Store the price ID of the subscription
+      firebaseRole: firebaseRole // Set the firebaseRole field based on the subscription
+    });
 
-    console.log('Checkout session created:', session.id);
+    // If bookData is provided, create or update the library document
+    if (bookData) {
+      await createLibraryDocument(firestore, uid, bookData);
+    }
+
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

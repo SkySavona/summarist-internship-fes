@@ -16,7 +16,6 @@ const SelectedBook: React.FC = () => {
         const data: Book[] = await response.json();
         setCurrentBook(data[0]); 
       } catch (error) {
-        console.error("Error fetching selected books:", error);
       }
     };
 

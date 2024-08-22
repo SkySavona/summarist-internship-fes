@@ -27,7 +27,6 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
   useEffect(() => {
     const fetchAudioDuration = async () => {
       try {
-        // Fetch the book details to get the audioLink
         const bookResponse = await fetch(`https://us-central1-summaristt.cloudfunctions.net/getBook?id=${book.id}`);
         const bookData = await bookResponse.json();
         const audioLink = bookData.audioLink;
@@ -42,17 +41,14 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
           });
 
           audio.addEventListener("error", () => {
-            console.error("Error loading audio file");
             setAudioDuration("Duration not available");
           });
 
-          // Start loading the audio file
           audio.load();
         } else {
           setAudioDuration("Audio not available");
         }
       } catch (error) {
-        console.error("Error fetching audio duration:", error);
         setAudioDuration("Duration not available");
       }
     };
