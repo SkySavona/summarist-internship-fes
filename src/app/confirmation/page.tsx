@@ -29,7 +29,7 @@ const Confirmation: React.FC = () => {
       <motion.button
         onClick={handleButtonClick}
         className="bg-green-1 text-white py-3 px-6 rounded-md text-lg hover:bg-green-2 transition duration-300 ease-in-out"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeInOut", delay: 0.3 }}
       >

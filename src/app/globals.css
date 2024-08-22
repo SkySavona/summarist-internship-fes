@@ -544,8 +544,36 @@ button:disabled {
   }
 }
 
+
 @media (max-width: 576px) {
   .nav__list--mobile {
     display: none;
   }
+}
+@media (max-width: 475px) {
+  .custom-padding {
+    padding-bottom: 80px;
+  }
+}
+@media (max-width: 440px) {
+  .custom-padding {
+    padding-bottom: 60px;
+  }
+}
+
+@media (max-width: 375px) {
+  .custom-padding {
+    padding-bottom: 44px;
+  }
+
+@media (max-width: 340px) {
+  .custom-padding {
+    padding-bottom: 32px;
+  }
+}
+@media (max-width: 320px) {
+  .custom-padding {
+    padding-bottom: 16px;
+  }
+}
 }

@@ -14,7 +14,7 @@ interface ButtonProps {
   user?: User | null | undefined;
   loading?: boolean;
   onLoginSuccess?: () => void;
-  onClick?: () => void; // Add this line
+  onClick?: () => void; 
 }
 
 const LoginButton: React.FC<ButtonProps> = ({
@@ -31,10 +31,10 @@ const LoginButton: React.FC<ButtonProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
-    const handleSignOut = async () => {
+  const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      if (auth) { // Ensure auth is defined
+      if (auth) { 
         await signOut(auth);
         setShowSignOutPopup(true);
         setTimeout(() => {
@@ -91,6 +91,7 @@ const LoginButton: React.FC<ButtonProps> = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
+        initialView="login"
       />
       {showSignOutPopup && (
         <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
