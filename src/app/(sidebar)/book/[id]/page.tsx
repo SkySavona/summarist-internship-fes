@@ -127,9 +127,27 @@ const BookDetails: React.FC = () => {
   };
 
   const handleAddToLibrary = () => {
-    // Placeholder for adding to library functionality
-    alert("Add to library functionality not implemented");
+    if (!book) return;
+  
+    // Retrieve the existing library from local storage
+    const existingLibrary = JSON.parse(localStorage.getItem('myLibrary') || '[]');
+  
+    // Check if the book is already in the library
+    const isAlreadyInLibrary = existingLibrary.some((savedBook: Book) => savedBook.id === book.id);
+  
+    if (!isAlreadyInLibrary) {
+      // Add the new book to the library
+      const updatedLibrary = [...existingLibrary, book];
+  
+      // Save the updated library to local storage
+      localStorage.setItem('myLibrary', JSON.stringify(updatedLibrary));
+  
+      alert("Book added to your library!");
+    } else {
+      alert("Book is already in your library!");
+    }
   };
+
 
   if (!book && !error) {
     return <SkeletonBookDetails />;

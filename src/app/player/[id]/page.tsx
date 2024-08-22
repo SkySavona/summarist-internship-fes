@@ -9,6 +9,7 @@ import PlayerPageSidebar from '@/components/PlayerPageSidebar';
 import Searchbar from '@/components/Searchbar';
 import { motion } from 'framer-motion';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { FaCheck } from 'react-icons/fa';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -22,9 +23,10 @@ const stagger = {
 interface PlayerContentProps {
   book: Book;
   fontSize: string;
+  onMarkAsFinished: () => void;
 }
 
-const PlayerContent: React.FC<PlayerContentProps> = ({ book, fontSize }) => (
+const PlayerContent: React.FC<PlayerContentProps> = ({ book, fontSize, onMarkAsFinished }) => (
   <motion.div
     initial="hidden"
     animate="visible"
@@ -46,6 +48,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ book, fontSize }) => (
         <div className={`text-blue-1 mb-8 whitespace-pre-line ${fontSize}`}>
           {book.summary}
         </div>
+        <button
+          onClick={onMarkAsFinished}
+          className="bg-green-500 text-white px-4 py-2 rounded-md mt-8 hover:bg-green-600 transition-colors duration-200 flex items-center justify-center mx-auto"
+        >
+          <FaCheck className="inline-block mr-2" />
+          Mark as Finished
+        </button>
       </motion.div>
     </main>
   </motion.div>
@@ -77,6 +86,28 @@ const PlayerPage: React.FC = () => {
     }
   }, [id]);
 
+  const handleMarkAsFinished = () => {
+    if (!book) return;
+
+    // Retrieve the existing finished books from local storage
+    const existingFinishedBooks = JSON.parse(localStorage.getItem('finishedBooks') || '[]');
+
+    // Check if the book is already in the finished list
+    const isAlreadyFinished = existingFinishedBooks.some((savedBook: Book) => savedBook.id === book.id);
+
+    if (!isAlreadyFinished) {
+      // Add the new book to the finished list
+      const updatedFinishedBooks = [...existingFinishedBooks, book];
+
+      // Save the updated finished list to local storage
+      localStorage.setItem('finishedBooks', JSON.stringify(updatedFinishedBooks));
+
+      alert("Book marked as finished!");
+    } else {
+      alert("Book is already marked as finished!");
+    }
+  };
+
   if (!book) {
     return <LoadingSpinner />;
   }
@@ -86,7 +117,7 @@ const PlayerPage: React.FC = () => {
       <div className="flex h-screen relative">
         <PlayerPageSidebar onFontSizeChange={setFontSize} />
         <div className="flex flex-col w-full h-full">
-          <PlayerContent book={book} fontSize={fontSize} />
+          <PlayerContent book={book} fontSize={fontSize} onMarkAsFinished={handleMarkAsFinished} />
           <div className="sticky bottom-0 left-0 w-full bg-white z-10">
             <AudioPlayer book={book} />
           </div>
