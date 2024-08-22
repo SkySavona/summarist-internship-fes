@@ -2,91 +2,31 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import LoginButton from "@/components/auth/LoginButton";
-import { AiOutlineHome, AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
-import { PiBookmarkSimple } from "react-icons/pi";
-import { LuPencilLine } from "react-icons/lu";
-import { CgSearch } from "react-icons/cg";
-import { BsGear } from "react-icons/bs";
-import { IoMdHelpCircleOutline } from "react-icons/io";
-import { CiLogin } from "react-icons/ci";
+import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import { User } from "firebase/auth";
 import { auth } from "@/services/firebaseConfig";
-
-const iconMap = {
-  AiOutlineHome,
-  PiBookmarkSimple,
-  LuPencilLine,
-  CgSearch,
-  BsGear,
-  IoMdHelpCircleOutline,
-  CiLogin,
-};
-
-type IconName = keyof typeof iconMap;
-
-interface SidebarLink {
-  iconName: IconName;
-  route: string;
-  label: string;
-  cursorTo: string;
-}
-
-const sidebarLinks: ReadonlyArray<SidebarLink> = [
-  {
-    iconName: "AiOutlineHome",
-    route: "/for-you",
-    label: "For You",
-    cursorTo: "pointer",
-  },
-  {
-    iconName: "PiBookmarkSimple",
-    route: "/my-library",
-    label: "My Library",
-    cursorTo: "pointer",
-  },
-  {
-    iconName: "LuPencilLine",
-    route: "#",
-    label: "Highlights",
-    cursorTo: "not-allowed",
-  },
-  {
-    iconName: "CgSearch",
-    route: "/search",
-    label: "Search",
-    cursorTo: "not-allowed",
-  },
-  {
-    iconName: "BsGear",
-    route: "/settings",
-    label: "Settings",
-    cursorTo: "pointer",
-  },
-  {
-    iconName: "IoMdHelpCircleOutline",
-    route: "/help",
-    label: "Help & Support",
-    cursorTo: "not-allowed",
-  },
-];
+import { iconMap, sidebarLinks, SidebarLink } from "@/constants/sidebar";
+import AuthModal from "@/components/auth/AuthModal";
+import SidebarLoginButton from "@/components/auth/SidebarLoginButton";
+import { signOut } from "firebase/auth";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  onLoginClick?: () => void;
 }
 
-const SidebarLayout: React.FC<SidebarLayoutProps> = ({
-  children,
-  onLoginClick,
-}) => {
+const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showSignOutPopup, setShowSignOutPopup] = useState(false);
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth?.onAuthStateChanged((currentUser) => {
@@ -97,10 +37,47 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
     return () => unsubscribe && unsubscribe();
   }, []);
 
-  const renderLink = (
-    { route, label, iconName, cursorTo }: SidebarLink,
-    isFooter = false
-  ) => {
+  const handleLoginClick = () => {
+    if (user) {
+      handleSignOut();
+    } else {
+      setIsAuthModalOpen(true);
+      setIsOpen(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      if (auth) {
+        await signOut(auth);
+        setShowSignOutPopup(true);
+        setTimeout(() => {
+          setShowSignOutPopup(false);
+        }, 3000);
+      } else {
+        console.error("Auth object is undefined");
+      }
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthModalOpen(false);
+    setShowSignInPopup(true);
+    setTimeout(() => {
+      setShowSignInPopup(false);
+    }, 3000);
+
+    if (pathname === "/") {
+      router.push("/for-you");
+    }
+  };
+
+  const renderLink = ({ route, label, iconName, cursorTo }: SidebarLink) => {
     const Icon = iconMap[iconName];
     const isActive = pathname === route;
     return (
@@ -124,9 +101,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
 
   const [mainLinks, footerLinks] = sidebarLinks.reduce(
     (acc, link) => {
-      acc[["Settings", "Help & Support"].includes(link.label) ? 1 : 0].push(
-        link
-      );
+      acc[["Settings", "Help & Support"].includes(link.label) ? 1 : 0].push(link);
       return acc;
     },
     [[], []] as [SidebarLink[], SidebarLink[]]
@@ -170,25 +145,40 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
           </div>
           <div className="flex-grow">
             <nav className="flex flex-col gap-4">
-              {mainLinks.map((link) => renderLink(link))}
+              {mainLinks.map(renderLink)}
             </nav>
           </div>
           <div className="mt-auto">
-            {footerLinks.map((link) => renderLink(link, true))}
-            <LoginButton
+            {footerLinks.map(renderLink)}
+            <SidebarLoginButton
               user={user}
-              loading={loading}
+              loading={loading || isSigningOut}
               className="mt-4"
-              onClick={onLoginClick}
+              onClick={handleLoginClick}
             >
               {user ? "Sign Out" : "Login"}
-            </LoginButton>
+            </SidebarLoginButton>
           </div>
         </div>
       </aside>
       <main className="flex-1 ml-0 lg:ml-64 transition-margin duration-300 ease-in-out relative">
         {children}
       </main>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
+      {showSignOutPopup && (
+        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
+          Successfully signed out!
+        </div>
+      )}
+      {showSignInPopup && (
+        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
+          Successfully signed in!
+        </div>
+      )}
     </div>
   );
 };

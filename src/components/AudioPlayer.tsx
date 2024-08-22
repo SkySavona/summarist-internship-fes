@@ -112,7 +112,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
   useEffect(() => {
     const audioElement = audioRef.current;
     if (audio?.audioUrl) {
-      setIsPlaying(false); // Ensure the player does not auto-play
+      setIsPlaying(false); 
     } else {
       audioElement?.pause();
       setIsPlaying(false);
@@ -132,13 +132,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
   return (
     <div
       className={cn(
-        "sticky bottom-0 text-white left-0 flex flex-col bg-blue-1",
+        "sticky bottom-0 text-white left-0 flex flex-col bg-blue-1 ",
         {
           hidden: !audio?.audioUrl || audio?.audioUrl === "",
         }
       )}
     >
-      <section className="flex h-auto w-full items-center justify-between px-4 md:px-8 flex-wrap py-2">
+      <section className="flex flex-col md:flex-row items-center justify-between w-full px-4 md:px-8 py-2">
         <audio
           ref={audioRef}
           src={audio?.audioUrl}
@@ -146,24 +146,24 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleAudioEnded}
         />
-        <div className="flex items-center gap-4 max-md:order-2 max-md:w-full max-md:justify-center">
+        <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
           <Link href={`/podcast/${audio?.podcastId}`}>
             <Image
               src={audio?.imageUrl || "/images/player1.png"}
               width={48}
               height={48}
               alt="player1"
-              className="aspect-square rounded-xl max-md:w-12 max-md:h-12"
+              className="aspect-square rounded-xl"
             />
           </Link>
-          <div className="flex w-[140px] flex-col max-md:w-[100px]">
+          <div className="flex flex-col w-28 md:w-36 text-center md:text-left">
             <h2 className="text-14 truncate font-semibold text-white-1">
               {audio?.title}
             </h2>
             <p className="text-12 font-normal text-white-2">{audio?.author}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 md:gap-6 max-md:order-1 max-md:w-full max-md:justify-center">
+        <div className="flex items-center gap-3 md:gap-6 w-full md:w-auto justify-center mt-2 md:mt-0">
           <div className="flex items-center gap-1.5">
             <Image
               src="/icons/reverse.svg"
@@ -183,7 +183,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
             height={28}
             alt="play"
             onClick={togglePlayPause}
-            className="max-md:w-6 max-md:h-6"
           />
           <div className="flex items-center gap-1.5">
             <Image
@@ -199,8 +198,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
             <span className="text-sm text-white-2 px-1 py-0.5">+10</span>
           </div>
         </div>
-        <div className="flex items-center gap-6 w-1/2 max-md:w-full max-md:justify-center max-md:flex-wrap max-md:order-3 max-md:gap-2">
-          <h2 className="text-14 font-normal text-white-2 max-md:hidden">
+        <div className="flex items-center gap-6 w-full md:w-auto justify-center mt-2 md:mt-0">
+          <h2 className="text-14 font-normal text-white-2 hidden md:block">
             {formatTime(currentTime)}
           </h2>
           <div className="w-full h-2 bg-gray-300 rounded-lg relative">
@@ -209,11 +208,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
           </div>
-          <h2 className="text-14 font-normal text-white-2 max-md:hidden">
+          <h2 className="text-14 font-normal text-white-2 hidden md:block">
             {formatTime(duration)}
           </h2>
         </div>
-        <div className="flex items-center  gap-3 max-md:flex-col max-md:mt-2 max-md:order-4">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-center mt-2 md:mt-0">
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -230,7 +229,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
               height={20}
               alt="mute unmute"
               onClick={toggleMute}
-              className="cursor-pointer  max-md:w-6 max-md:h-6"
+              className="cursor-pointer"
             />
           </div>
         </div>

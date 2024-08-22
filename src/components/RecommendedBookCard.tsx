@@ -67,9 +67,9 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
   return (
     <div
       onClick={handleClick}
-      className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+      className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-[rgba(245,245,245,0.9)] transition-all duration-300 ease-in-out "
     >
-      <div className="relative w-full h-60 mb-4">
+      <div className="relative w-full h-60 mb-2">
         <Image
           src={book.imageLink}
           alt={book.title}
@@ -86,15 +86,15 @@ const RecommendedBookCard: React.FC<RecommendedBookCardProps> = ({ book, onClick
      </div>
         )}
       </div>
-      <h3 className="text-lg font-bold">{book.title}</h3>
-      <p className="text-gray-600">{book.author}</p>
-      <p className="text-sm text-gray-600">{book.subTitle}</p>
-      <div className="flex items-center text-sm text-gray-600 mt-2">
-        {audioDuration && (
-          <>
-            <Clock size={16} className="mr-1" />
-            <span>{audioDuration}</span>
-          </>
+      <h3 className="text-lg font-bold text-center  text-blue-1">{book.title}</h3>
+      <p className="text-blue-1 text-center  italic text-sm pb-2">{book.author}</p>
+      <p className="text-sm text-gray-600 text-center ">{book.subTitle}</p>
+      <div className="flex items-center justify-center text-sm text-center  mx-auto text-gray-600 mt-2">
+  {audioDuration && (
+    <>
+      <Clock size={16} className="mr-1" />
+      <span>{audioDuration}</span>
+    </>
         )}
       </div>
     </div>

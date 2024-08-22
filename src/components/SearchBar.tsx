@@ -20,7 +20,6 @@ interface Book {
 const SearchBar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
@@ -80,7 +79,7 @@ const SearchBar: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full md:w-1/2 lg:w-1/4 ml-auto" ref={searchBarRef}>
+    <div className="relative w-3/5 lg:w-1/4 ml-auto" ref={searchBarRef}>
       <div className="relative">
         <input
           type="text"

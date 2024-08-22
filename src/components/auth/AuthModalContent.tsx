@@ -1,5 +1,6 @@
-"use client";
-import React, { useState, useEffect } from "react";
+'use client';
+
+import React, { useState, useEffect, Suspense } from "react";
 import {
   getFirebaseAuth,
   getFirebaseDb,
@@ -22,11 +23,13 @@ import { useLoading } from "@/components/ui/LoadingContext";
 interface AuthModalContentProps {
   onClose: () => void;
   onLoginSuccess?: () => void;
+  initialView?: "login" | "signup";
 }
 
 const AuthModalContent: React.FC<AuthModalContentProps> = ({
   onClose,
   onLoginSuccess,
+  initialView = "login",
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,7 +45,7 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialView);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
@@ -275,7 +278,7 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
   };
 
   return (
-    <>
+    <Suspense fallback={<div>Loading...</div>}>
       <div className="bg-white p-8 rounded-lg max-w-md w-full relative">
         <button
           onClick={onClose}
@@ -419,41 +422,41 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
             <p>You don't have an account yet. Would you like to sign up using your Google account?</p>
             <div className="mt-4 flex justify-end">
               <button
-                className="bg-green-1 hover:bg-green-2 transition-colors duration-300 ease-in-out text-white px-4 py-2 rounded mr-2"
-                onClick={handleGoogleSignUpConfirm}
-              >
-                Yes, Sign Me Up
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-700 transition-color duration-300 ease-in-out text-white px-4 py-2 rounded"
-                onClick={() => {
-                  setConfirmGoogleSignUp(false);
-                  if (auth) {
-                    auth.signOut();
-                  }
-                  setError("Sign up cancelled. You can try again or use a different method to sign in.");
-                }}
-              >
-                No, Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+               className="bg-green-1 hover:bg-green-2 transition-colors duration-300 ease-in-out text-white px-4 py-2 rounded mr-2"
+               onClick={handleGoogleSignUpConfirm}
+             >
+               Yes, Sign Me Up
+             </button>
+             <button
+               className="bg-red-500 hover:bg-red-700 transition-color duration-300 ease-in-out text-white px-4 py-2 rounded"
+               onClick={() => {
+                 setConfirmGoogleSignUp(false);
+                 if (auth) {
+                   auth.signOut();
+                 }
+                 setError("Sign up cancelled. You can try again or use a different method to sign in.");
+               }}
+             >
+               No, Cancel
+             </button>
+           </div>
+         </div>
+       </div>
+     )}
 
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">
-            <div className="text-green-500 text-5xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold mb-4">
-              Thank you for signing up!
-            </h2>
-            <p>You will be redirected shortly...</p>
-          </div>
-        </div>
-      )}
-    </>
-  );
+     {showSuccessModal && (
+       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+         <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">
+           <div className="text-green-500 text-5xl mb-4">✓</div>
+           <h2 className="text-2xl font-bold mb-4">
+             Thank you for signing up!
+           </h2>
+           <p>You will be redirected shortly...</p>
+         </div>
+       </div>
+     )}
+   </Suspense>
+ );
 };
 
 export default AuthModalContent;

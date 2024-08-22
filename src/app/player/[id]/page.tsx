@@ -60,13 +60,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         variants={fadeInUp}
         className="flex-1 overflow-y-auto px-4 md:px-8 py-8"
       >
-        <h1
-          className={`text-[24px] md:text-[32px] text-center font-bold text-blue-1 mb-4 ${fontSize}`}
-        >
-          {book.title}
-        </h1>
+     <h1
+  className={`md:text-[34px] text-[28px] text-center font-bold text-blue-1 mb-4 leading-normal md:leading-relaxed ${fontSize}`}
+>
+  {book.title}
+</h1>
         <p
-          className={`text-lg md:text-xl text-blue-1 mb-4 text-center ${fontSize}`}
+          className={`text-lg md:text-xl italic text-blue-1 mb-4 text-center ${fontSize}`}
         >
           {book.author}
         </p>
@@ -204,7 +204,7 @@ const PlayerPage: React.FC = () => {
     <AudioProvider>
       <div className="flex h-screen relative">
         <PlayerPageSidebar onFontSizeChange={setFontSize} />
-        <div className="flex flex-col w-full h-full">
+        <div className="flex flex-col w-full h-full lg:ml-64">
           <PlayerContent
             book={book}
             fontSize={fontSize}

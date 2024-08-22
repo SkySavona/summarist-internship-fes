@@ -186,31 +186,31 @@ const BookDetails: React.FC = () => {
         >
           <motion.div
             variants={fadeInUp}
-            className="flex flex-col-reverse md:flex-row justify-between items-start md:items-start"
+            className="flex flex-col-reverse md:flex-row justify-between items-center md:items-start"
           >
-            <div className="md:w-2/3">
+            <div className="md:w-2/3 flex flex-col items-center md:items-start">
               <motion.h1
                 variants={fadeInUp}
-                className="text-blue-1 text-3xl md:text-4xl font-bold mt-4 md:mt-0"
+                className="text-blue-1 text-3xl md:text-4xl font-bold mt-4 md:mt-0 text-center md:text-left"
               >
                 {book.title}
               </motion.h1>
               <motion.p
                 variants={fadeInUp}
-                className="text-blue-1 text-md md:text-lg mt-2"
+                className="text-blue-1 italic text-md md:text-lg mt-2 text-center md:text-left"
               >
                 {book.author}
               </motion.p>
               <motion.p
                 variants={fadeInUp}
-                className="text-gray-2 text-sm md:text-md mt-1 border-b pb-4 border-gray-300"
+                className="text-gray-2 text-sm md:text-md mt-1 border-b pb-4 border-gray-300 text-center md:text-left"
               >
                 {book.subTitle}
               </motion.p>
 
               <motion.div
                 variants={fadeInUp}
-                className="flex flex-wrap mt-4 text-blue-1 text-xs md:text-sm space-x-6"
+                className="flex flex-wrap mt-4 text-blue-1 text-xs md:text-sm space-x-6 justify-center md:justify-start"
               >
                 <div className="flex items-center">
                   <FaStar className="text-yellow-500 mr-2" />
@@ -227,7 +227,7 @@ const BookDetails: React.FC = () => {
 
               <motion.div
                 variants={fadeInUp}
-                className="flex flex-wrap mt-4 text-xs md:text-sm space-x-6 border-b pb-4 border-gray-300"
+                className="flex flex-wrap mt-4 text-xs md:text-sm space-x-6 border-b pb-4 border-gray-300 justify-center md:justify-start"
               >
                 <div className="flex text-blue-1 items-center">
                   <FaMicrophone className="mr-2" />
@@ -241,7 +241,7 @@ const BookDetails: React.FC = () => {
 
               <motion.div
                 variants={fadeInUp}
-                className="flex items-center mt-8 space-x-4"
+                className="flex items-center mt-8 space-x-4 justify-center md:justify-start"
               >
                 <button
                   onClick={handleReadOrListen}
@@ -263,7 +263,10 @@ const BookDetails: React.FC = () => {
                 </button>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="flex mt-6">
+              <motion.div
+                variants={fadeInUp}
+                className="flex mt-6 justify-center md:justify-start"
+              >
                 <button
                   onClick={handleAddToLibrary}
                   className="text-blue-1 flex items-center text-sm md:text-base"
@@ -283,10 +286,10 @@ const BookDetails: React.FC = () => {
                 variants={fadeInUp}
                 className="mt-8 border-b pb-4 border-gray-300"
               >
-                <h2 className="text-lg md:text-xl font-semibold text-blue-1">
+                <h2 className="text-lg md:text-xl text-center md:text-left font-semibold text-blue-1">
                   What's It About?
                 </h2>
-                <div className="flex flex-wrap mt-2 space-x-2">
+                <div className="flex flex-wrap mt-2 space-x-2 justify-center md:justify-start">
                   {book.tags.map((tag) => (
                     <span
                       key={tag}
@@ -296,16 +299,16 @@ const BookDetails: React.FC = () => {
                     </span>
                   ))}
                 </div>
-                <p className="mt-4 text-gray-1 text-sm md:text-base">
+                <p className="mt-4 text-gray-1 text-sm md:text-base text-left">
                   {book.bookDescription}
                 </p>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="mt-8 ">
-                <h2 className="text-lg md:text-xl font-semibold text-blue-1">
+              <motion.div variants={fadeInUp} className="mt-8">
+                <h2 className="text-lg md:text-xl font-semibold text-blue-1 text-center md:text-left">
                   About The Author
                 </h2>
-                <p className="mt-4 text-gray-1 text-sm md:text-base">
+                <p className="mt-4 text-gray-1 text-sm md:text-base text-left">
                   {book.authorDescription}
                 </p>
               </motion.div>
@@ -319,7 +322,7 @@ const BookDetails: React.FC = () => {
                 src={book.imageLink}
                 alt={book.title}
                 fill
-                className="object-cover rounded-lg shadow-lg"
+                className="object-contain rounded-lg shadow-lg"
               />
               {book.subscriptionRequired && (
                 <div className="absolute top-2 right-2 bg-blue-1 text-white text-xs px-2 py-1 rounded-full">

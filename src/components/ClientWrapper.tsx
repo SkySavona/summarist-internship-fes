@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { LoadingProvider, useLoading } from '@/components/ui/LoadingContext';
 import { usePathname, useSearchParams } from 'next/navigation';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -26,7 +26,7 @@ function CustomLoadingSpinner() {
   if (!isLoading) return null;
 
   return (
-    <div className="fixed inset-0  bg-white flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-white flex justify-center items-center z-50">
       <LoadingSpinner />
     </div>
   );
@@ -35,9 +35,11 @@ function CustomLoadingSpinner() {
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LoadingProvider>
-      <NavigationEvents />
-      <CustomLoadingSpinner />
-      {children}
+      <Suspense fallback={<LoadingSpinner />}>
+        <NavigationEvents />
+        <CustomLoadingSpinner />
+        {children}
+      </Suspense>
     </LoadingProvider>
   );
 }
