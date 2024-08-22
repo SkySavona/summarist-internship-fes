@@ -11,28 +11,32 @@ import {
 } from "firebase/auth";
 import { FaGoogle, FaUser } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
-
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/for-you';
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  
 
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          window.location.href = "/for-you";
+          handleSuccessfulAuth();
         }
       } catch (error: any) {
         setError(error.message);
@@ -41,6 +45,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     handleRedirectResult();
   }, []);
+
+  const handleSuccessfulAuth = () => {
+    if (onLoginSuccess) {
+      onLoginSuccess();
+    } else {
+      router.push(returnUrl);
+    }
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +71,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         await handleForgotPassword();
         return;
       }
-      window.location.href = "/for-you";
+      handleSuccessfulAuth();
     } catch (error: any) {
       setError(error.message);
     }
@@ -67,7 +80,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGoogleAuth = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      window.location.href = "/for-you";
+      handleSuccessfulAuth();
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") {
         return;
@@ -79,7 +92,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGuestLogin = () => {
     signInWithEmailAndPassword(auth, "guest@gmail.com", "guest123")
       .then(() => {
-        window.location.href = "/for-you";
+        handleSuccessfulAuth();
       })
       .catch((error) => setError(error.message));
   };
@@ -106,8 +119,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-<div className="bg-white p-8 rounded-lg max-w-md w-full relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-8 rounded-lg max-w-md w-full relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -115,11 +128,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <IoMdClose size={24} />
         </button>
         <h2 className="text-2xl font-bold mb-6 text-center">
-          {mode === "login" 
-            ? "Login to Summarist" 
-            : mode === "signup" 
-              ? "Sign up for Summarist"
-              : "Reset Password"}
+          {mode === "login"
+            ? "Login to Summarist"
+            : mode === "signup"
+            ? "Sign up for Summarist"
+            : "Reset Password"}
         </h2>
         <div className="space-y-4">
           {mode === "login" && (
@@ -184,13 +197,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             )}
             {error && <p className="text-red-500 text-sm">{error}</p>}
             {mode === "forgot" && resetEmailSent && (
-              <p className="text-green-500 text-sm">Password reset email sent! Please check your inbox.</p>
+              <p className="text-green-500 text-sm">
+                Password reset email sent! Please check your inbox.
+              </p>
             )}
             <button
               type="submit"
               className="w-full bg-green-500 text-white py-3 rounded-md hover:bg-green-600 transition-colors duration-200"
             >
-              {mode === "login" ? "Login" : mode === "signup" ? "Sign Up" : "Reset Password"}
+              {mode === "login"
+                ? "Login"
+                : mode === "signup"
+                ? "Sign Up"
+                : "Reset Password"}
             </button>
           </form>
           <p className="text-center text-sm text-gray-600">

@@ -116,7 +116,7 @@ const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: stri
           "bg-green-500 text-white": selectedFontSize === "text-sm",
         }
       )}
-      style={{ fontSize: '0.875rem' }} // Corresponds to text-sm
+      style={{ fontSize: '0.875rem' }} 
     >
       Aa
     </button>
@@ -128,7 +128,7 @@ const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: stri
           "bg-green-500 text-white": selectedFontSize === "text-base",
         }
       )}
-      style={{ fontSize: '1rem' }} // Corresponds to text-base
+      style={{ fontSize: '1rem' }} 
     >
       Aa
     </button>
@@ -140,7 +140,7 @@ const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: stri
           "bg-green-500 text-white": selectedFontSize === "text-lg",
         }
       )}
-      style={{ fontSize: '1.125rem' }} // Corresponds to text-lg
+      style={{ fontSize: '1.125rem' }}
     >
       Aa
     </button>
@@ -152,7 +152,7 @@ const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: stri
           "bg-green-500 text-white": selectedFontSize === "text-xl",
         }
       )}
-      style={{ fontSize: '1.25rem' }} // Corresponds to text-xl
+      style={{ fontSize: '1.25rem' }} 
     >
       Aa
     </button>

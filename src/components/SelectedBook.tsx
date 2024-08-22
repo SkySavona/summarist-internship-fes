@@ -23,25 +23,25 @@ const SelectedBook: React.FC = () => {
     fetchBooks();
   }, []);
 
-  if (!currentBook) {
-    return null;
-  }
-
   const handleClick = () => {
-    router.push(`/book/${currentBook.id}`);
+    router.push(`/book/${currentBook?.id}`);
   };
+
+  if (!currentBook) {
+    return null; 
+  }
 
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 mt-4">Selected Just For You</h2>
       <div
-        className="bg-yellow-100 p-4 rounded-lg flex items-center mb-6 cursor-pointer"
+        className="bg-orange-100 p-4 rounded-lg flex flex-col md:flex-row items-center mb-6 cursor-pointer"
         onClick={handleClick}
       >
-        <div className="flex-1">
-          <h3 className="text-lg font-bold">{currentBook.subTitle}</h3>
+        <div className="flex-1 mb-4 md:mb-0 md:mr-4">
+          <h3 className="text-md text-blue-1 border-r-0 md:border-r-2 md:h-32 border-gray-300">{currentBook.subTitle}</h3>
         </div>
-        <div className="flex-shrink-0 mx-4">
+        <div className="flex-shrink-0 mx-0 md:mx-4 mb-4 md:mb-0">
           <Image
             src={currentBook.imageLink}
             alt={currentBook.title}
@@ -50,11 +50,11 @@ const SelectedBook: React.FC = () => {
             className="rounded-lg"
           />
         </div>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold">{currentBook.title}</h3>
+        <div className="flex-1 text-center md:text-left">
+          <h3 className="text-xl text-blue-1 font-bold">{currentBook.title}</h3>
           <p className="text-gray-600">{currentBook.author}</p>
-          <div className="flex items-center mt-2">
-            <button className="bg-black text-white rounded-full p-2 mr-2">
+          <div className="flex justify-center md:justify-start items-center mt-2">
+            <button className="bg-black text-white rounded-full p-2 mr-2 hover:bg-gray-300 transition-colors duration-300 ease-in-out">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -70,9 +70,8 @@ const SelectedBook: React.FC = () => {
                 />
               </svg>
             </button>
-            <span>3 mins 23 secs</span> {/* Adjust this to dynamic duration if available */} 
+            <span>3 mins 23 secs</span> 
           </div>
-          {/* // TODO:  */}
         </div>
       </div>
     </div>
