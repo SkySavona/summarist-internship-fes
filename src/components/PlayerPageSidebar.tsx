@@ -14,7 +14,7 @@ import { BsGear } from "react-icons/bs";
 import { IoMdHelpCircleOutline } from "react-icons/io";
 import { CiLogin } from "react-icons/ci";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/services/firebase";
+import { auth } from "@/services/firebaseConfig";
 
 const iconMap = {
   AiOutlineHome,
@@ -36,17 +36,51 @@ interface SidebarLink {
 }
 
 const sidebarLinks: ReadonlyArray<SidebarLink> = [
-  { iconName: "AiOutlineHome", route: "/for-you", label: "For You", cursorTo: "pointer" },
-  { iconName: "PiBookmarkSimple", route: "/library", label: "My Library", cursorTo: "pointer" },
-  { iconName: "LuPencilLine", route: "#", label: "Highlights", cursorTo: "not-allowed" },
-  { iconName: "CgSearch", route: "/search", label: "Search", cursorTo: "not-allowed" },
-  { iconName: "BsGear", route: "/settings", label: "Settings", cursorTo: "pointer" },
-  { iconName: "IoMdHelpCircleOutline", route: "#", label: "Help & Support", cursorTo: "not-allowed" },
+  {
+    iconName: "AiOutlineHome",
+    route: "/for-you",
+    label: "For You",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "PiBookmarkSimple",
+    route: "/library",
+    label: "My Library",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "LuPencilLine",
+    route: "#",
+    label: "Highlights",
+    cursorTo: "not-allowed",
+  },
+  {
+    iconName: "CgSearch",
+    route: "/search",
+    label: "Search",
+    cursorTo: "not-allowed",
+  },
+  {
+    iconName: "BsGear",
+    route: "/settings",
+    label: "Settings",
+    cursorTo: "pointer",
+  },
+  {
+    iconName: "IoMdHelpCircleOutline",
+    route: "#",
+    label: "Help & Support",
+    cursorTo: "not-allowed",
+  },
 ];
 
-const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: string) => void }) => {
+const PlayerPageSidebar = ({
+  onFontSizeChange,
+}: {
+  onFontSizeChange: (size: string) => void;
+}) => {
   const pathname = usePathname();
-  const [user, loading] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth!);
   const [selectedFontSize, setSelectedFontSize] = useState("text-base");
 
   const renderLink = (
@@ -106,58 +140,58 @@ const PlayerPageSidebar = ({ onFontSizeChange }: { onFontSizeChange: (size: stri
             {mainLinks.map((link) => renderLink(link))}
           </nav>
           <div className="mt-6">
-  <h3 className="text-sm font-semibold text-gray-600">Font Size</h3>
-  <div className="flex gap-2 mt-2">
-    <button
-      onClick={() => handleFontSizeChange("text-sm")}
-      className={cn(
-        "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
-        {
-          "bg-green-500 text-white": selectedFontSize === "text-sm",
-        }
-      )}
-      style={{ fontSize: '0.875rem' }} 
-    >
-      Aa
-    </button>
-    <button
-      onClick={() => handleFontSizeChange("text-base")}
-      className={cn(
-        "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
-        {
-          "bg-green-500 text-white": selectedFontSize === "text-base",
-        }
-      )}
-      style={{ fontSize: '1rem' }} 
-    >
-      Aa
-    </button>
-    <button
-      onClick={() => handleFontSizeChange("text-lg")}
-      className={cn(
-        "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
-        {
-          "bg-green-500 text-white": selectedFontSize === "text-lg",
-        }
-      )}
-      style={{ fontSize: '1.125rem' }}
-    >
-      Aa
-    </button>
-    <button
-      onClick={() => handleFontSizeChange("text-xl")}
-      className={cn(
-        "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
-        {
-          "bg-green-500 text-white": selectedFontSize === "text-xl",
-        }
-      )}
-      style={{ fontSize: '1.25rem' }} 
-    >
-      Aa
-    </button>
-  </div>
-</div>
+            <h3 className="text-sm font-semibold text-gray-600">Font Size</h3>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => handleFontSizeChange("text-sm")}
+                className={cn(
+                  "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
+                  {
+                    "bg-green-500 text-white": selectedFontSize === "text-sm",
+                  }
+                )}
+                style={{ fontSize: "0.875rem" }}
+              >
+                Aa
+              </button>
+              <button
+                onClick={() => handleFontSizeChange("text-base")}
+                className={cn(
+                  "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
+                  {
+                    "bg-green-500 text-white": selectedFontSize === "text-base",
+                  }
+                )}
+                style={{ fontSize: "1rem" }}
+              >
+                Aa
+              </button>
+              <button
+                onClick={() => handleFontSizeChange("text-lg")}
+                className={cn(
+                  "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
+                  {
+                    "bg-green-500 text-white": selectedFontSize === "text-lg",
+                  }
+                )}
+                style={{ fontSize: "1.125rem" }}
+              >
+                Aa
+              </button>
+              <button
+                onClick={() => handleFontSizeChange("text-xl")}
+                className={cn(
+                  "px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300",
+                  {
+                    "bg-green-500 text-white": selectedFontSize === "text-xl",
+                  }
+                )}
+                style={{ fontSize: "1.25rem" }}
+              >
+                Aa
+              </button>
+            </div>
+          </div>
         </div>
         <div className="mt-auto">
           {footerLinks.map((link) => renderLink(link, true))}

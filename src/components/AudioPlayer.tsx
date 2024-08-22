@@ -1,6 +1,5 @@
 "use client";
 
-
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -132,11 +131,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
 
   return (
     <div
-      className={cn("sticky bottom-0 text-white left-0 flex flex-col bg-blue-1", {
-        hidden: !audio?.audioUrl || audio?.audioUrl === "",
-      })}
+      className={cn(
+        "sticky bottom-0 text-white left-0 flex flex-col bg-blue-1",
+        {
+          hidden: !audio?.audioUrl || audio?.audioUrl === "",
+        }
+      )}
     >
-      <section className="flex h-[100px] w-full items-center justify-between px-4 max-md:flex-col max-md:justify-center max-md:gap-5 md:px-8">
+      <section className="flex h-auto w-full items-center justify-between px-4 md:px-8 flex-wrap py-2">
         <audio
           ref={audioRef}
           src={audio?.audioUrl}
@@ -144,69 +146,74 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleAudioEnded}
         />
-        <div className="flex items-center gap-4 max-md:hidden">
+        <div className="flex items-center gap-4 max-md:order-2 max-md:w-full max-md:justify-center">
           <Link href={`/podcast/${audio?.podcastId}`}>
             <Image
               src={audio?.imageUrl || "/images/player1.png"}
-              width={64}
-              height={64}
+              width={48}
+              height={48}
               alt="player1"
-              className="aspect-square rounded-xl"
+              className="aspect-square rounded-xl max-md:w-12 max-md:h-12"
             />
           </Link>
-          <div className="flex w-[160px] flex-col">
+          <div className="flex w-[140px] flex-col max-md:w-[100px]">
             <h2 className="text-14 truncate font-semibold text-white-1">
               {audio?.title}
             </h2>
             <p className="text-12 font-normal text-white-2">{audio?.author}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-3 md:gap-6 max-md:order-1 max-md:w-full max-md:justify-center">
           <div className="flex items-center gap-1.5">
             <Image
               src="/icons/reverse.svg"
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               alt="-10"
               onClick={handleRewindClick}
-              className={`cursor-pointer ${isRewindAnimating ? "animate-click" : ""}`}
+              className={`cursor-pointer ${
+                isRewindAnimating ? "animate-click" : ""
+              }`}
             />
-            <span className="text-sm text-white-2 px-2 py-1">-10</span>
+            <span className="text-sm text-white-2 px-1 py-0.5">-10</span>
           </div>
           <Image
             src={isPlaying ? "/icons/Pause.svg" : "/icons/Play.svg"}
-            width={30}
-            height={30}
+            width={28}
+            height={28}
             alt="play"
             onClick={togglePlayPause}
+            className="max-md:w-6 max-md:h-6"
           />
           <div className="flex items-center gap-1.5">
             <Image
               src="/icons/forward.svg"
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               alt="+10"
               onClick={handleForwardClick}
-              className={`cursor-pointer ${isForwardAnimating ? "animate-click" : ""}`}
+              className={`cursor-pointer ${
+                isForwardAnimating ? "animate-click" : ""
+              }`}
             />
-            <span className="text-sm text-white-2 px-2 py-1">+10</span>
+            <span className="text-sm text-white-2 px-1 py-0.5">+10</span>
           </div>
         </div>
-        <div className="flex items-center gap-6 w-1/2 max-md:w-full max-md:justify-center ml-10">
-          <h2 className="text-16 font-normal text-white-2 max-md:hidden">
+        <div className="flex items-center gap-6 w-1/2 max-md:w-full max-md:justify-center max-md:flex-wrap max-md:order-3 max-md:gap-2">
+          <h2 className="text-14 font-normal text-white-2 max-md:hidden">
             {formatTime(currentTime)}
           </h2>
-          <div className="w-1/2 h-2 bg-gray-300 rounded-lg relative">
+          <div className="w-full h-2 bg-gray-300 rounded-lg relative">
             <div
               className="h-2 bg-blue-500 rounded-lg"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
           </div>
-          <h2 className="text-16 font-normal text-white-2 max-md:hidden">
+          <h2 className="text-14 font-normal text-white-2 max-md:hidden">
             {formatTime(duration)}
           </h2>
         </div>
-        <div className="flex items-center gap-6 max-md:flex-col max-md:mt-4">
+        <div className="flex items-center  gap-3 max-md:flex-col max-md:mt-2 max-md:order-4">
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -215,15 +222,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ book }) => {
               step="0.01"
               value={volume}
               onChange={handleVolumeChange}
-              className="cursor-pointer w-24"
+              className="cursor-pointer w-20"
             />
             <Image
               src={isMuted ? "/icons/unmute.svg" : "/icons/mute.svg"}
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               alt="mute unmute"
               onClick={toggleMute}
-              className="cursor-pointer"
+              className="cursor-pointer  max-md:w-6 max-md:h-6"
             />
           </div>
         </div>

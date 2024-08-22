@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { CgSearch } from "react-icons/cg";
 import SearchBarSkeleton from "@/components/ui/SearchBarSkeleton";
 import Link from "next/link";
+import Image from 'next/image';
+
 import { usePathname } from "next/navigation";
 
 interface Book {
@@ -102,11 +104,13 @@ const SearchBar: React.FC = () => {
             filteredBooks.map((book) => (
               <Link href={`/book/${book.id}`} key={book.id}>
                 <div className="p-2 hover:bg-gray-100 text-sm flex items-start cursor-pointer">
-                  <img
-                    src={book.imageLink}
-                    alt={book.title}
-                    className="w-12 h-16 object-cover mr-3"
-                  />
+                <Image
+  src={book.imageLink}
+  alt={book.title}
+  width={48} // w-12 in Tailwind CSS is 48px
+  height={64} // h-16 in Tailwind CSS is 64px
+  className="object-cover mr-3"
+/>
                   <div>
                     <div className="font-semibold">{book.title}</div>
                     <div className="text-xs text-gray-600">{book.author}</div>
