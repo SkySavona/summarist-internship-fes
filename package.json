@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "json-server": "json-server --watch data/db.json --port 3001"
+    "lint": "next lint"
   },
   "dependencies": {
     "@radix-ui/react-progress": "^1.1.0",
@@ -22,9 +21,10 @@
     "firebase-app": "^0.0.1",
     "firebase-auth": "^0.1.2",
     "framer-motion": "^11.3.21",
-    "lucide-react": "^0.428.0",
+    "lint": "^1.1.2",
+    "lucide-react": "^0.429.0",
     "next": "14.2.5",
-    "react": "^18",
+    "react": "^18.3.1",
     "react-dom": "^18",
     "react-firebase-hooks": "^5.1.1",
     "react-icons": "^5.2.1",
