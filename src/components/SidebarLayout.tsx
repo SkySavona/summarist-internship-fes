@@ -45,7 +45,7 @@ const sidebarLinks: ReadonlyArray<SidebarLink> = [
   },
   {
     iconName: "PiBookmarkSimple",
-    route: "/library",
+    route: "/my-library",
     label: "My Library",
     cursorTo: "pointer",
   },

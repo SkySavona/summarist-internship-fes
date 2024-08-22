@@ -6,9 +6,13 @@ import { AudioProvider } from "@/app/providers/AudioProvider";
 import AudioPlayer from "@/components/AudioPlayer";
 import { Book } from "@/types/index";
 import PlayerPageSidebar from "@/components/PlayerPageSidebar";
-import Searchbar from "@/components/SearchBar";
+import SearchBar from "@/components/SearchBar";
 import { motion } from "framer-motion";
 import { FaCheck } from "react-icons/fa";
+import usePremiumStatus from "@/stripe/usePremiumStatus";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { getFirebaseAuth } from "@/services/firebaseConfig"; 
+import Link from "next/link";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -41,7 +45,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         variants={fadeInUp}
         className="pr-2 pb-4 border-b w-full border-gray-200"
       >
-        <Searchbar />
+        <SearchBar />
       </motion.div>
       <motion.div
         variants={fadeInUp}
@@ -77,6 +81,9 @@ const PlayerPage: React.FC = () => {
   const { id } = useParams();
   const [book, setBook] = useState<Book | null>(null);
   const [fontSize, setFontSize] = useState("text-base");
+  const auth = getFirebaseAuth();
+  const [user, loading, error] = useAuthState(auth);
+  const isPremium = usePremiumStatus(user || null);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -113,10 +120,10 @@ const PlayerPage: React.FC = () => {
     );
 
     if (!isAlreadyFinished) {
-      // Add the new book to the finished list
+
       const updatedFinishedBooks = [...existingFinishedBooks, book];
 
-      // Save the updated finished list to local storage
+     
       localStorage.setItem(
         "finishedBooks",
         JSON.stringify(updatedFinishedBooks)
@@ -127,24 +134,48 @@ const PlayerPage: React.FC = () => {
       alert("Book is already marked as finished!");
     }
   };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (!book) {
+    return <div>Loading book details...</div>;
+  }
+
+  if (book.subscriptionRequired && !isPremium) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-2xl font-bold mb-4">Premium Content</h1>
+        <p className="mb-4">
+          This book is only available to premium subscribers.
+        </p>
+        <Link
+          href="/choose-plan"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          Subscribe Now
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <AudioProvider>
       <div className="flex h-screen relative">
         <PlayerPageSidebar onFontSizeChange={setFontSize} />
         <div className="flex flex-col w-full h-full">
-          {book && (
-            <PlayerContent
-              book={book}
-              fontSize={fontSize}
-              onMarkAsFinished={handleMarkAsFinished}
-            />
-          )}
-          {book && (
-            <div className="sticky bottom-0 left-0 w-full bg-white z-10">
-              <AudioPlayer book={book} />
-            </div>
-          )}
+          <PlayerContent
+            book={book}
+            fontSize={fontSize}
+            onMarkAsFinished={handleMarkAsFinished}
+          />
+          <div className="sticky bottom-0 left-0 w-full bg-white z-10">
+            <AudioPlayer book={book} />
+          </div>
         </div>
       </div>
     </AudioProvider>

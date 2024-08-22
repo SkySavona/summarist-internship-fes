@@ -17,7 +17,8 @@ const LoginDefault: React.FC<LoginDefaultProps> = ({
 }) => {
   return (
     <>
-      <div className="pr-2 pb-4 pt-4 border-b w-full border-gray-200 z-2 relative">
+    <div className="pt-4"></div>
+      <div className="pr-2 pb-4 border-b w-full border-gray-200 z-2 relative">
         <Searchbar />
       </div>
       <div className="flex flex-col items-center justify-center p-4 pt-32">
@@ -32,9 +33,9 @@ const LoginDefault: React.FC<LoginDefaultProps> = ({
               <Image
                 src="/assets/login.png"
                 alt="Login illustration"
-                layout="fill"
+                fill
                 sizes="100%"
-                objectFit="contain"
+                className="object-contain"
               />
             </div>
           </div>
