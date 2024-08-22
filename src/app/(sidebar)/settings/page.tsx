@@ -5,6 +5,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import Searchbar from "@/components/SearchBar";
+import LoginDefault from "@/components/LoginDefault"; // Import your custom LoginDefault component
+import Link from "next/link";
 
 // Define the type for the user document
 interface UserDocument {
@@ -30,7 +32,6 @@ const Settings: React.FC = () => {
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserDocument;
-            console.log("Fetched user data:", userData); // Add this line for debugging
 
             if (userData.firebaseRole === "Premium") {
               setSubscriptionPlan("Premium");
@@ -41,7 +42,6 @@ const Settings: React.FC = () => {
             setSubscriptionPlan("No subscription data");
           }
         } catch (error) {
-          console.error("Error fetching subscription plan:", error);
           setSubscriptionPlan("Error fetching plan");
         }
       } else {
@@ -52,6 +52,12 @@ const Settings: React.FC = () => {
 
     fetchSubscriptionPlan();
   }, [user]);
+
+  if (!user) {
+    return <LoginDefault onLoginSuccess={function (): void {
+      throw new Error("Function not implemented.");
+    } } />; // Use your custom LoginDefault component when the user is not logged in
+  }
 
   return (
     <div className="pt-4">
@@ -73,6 +79,14 @@ const Settings: React.FC = () => {
           <h2 className="text-xl font-semibold text-blue-1 mb-2">Email</h2>
           <p className="text-blue-1">{userEmail}</p>
         </div>
+        {subscriptionPlan !== "Premium" && (
+          <Link
+            href="/choose-plan"
+            className="bg-green-1 text-white px-4 py-2 rounded transition ease-in-out duration-300 hover:bg-green-2"
+          >
+            Subscribe Now
+          </Link>
+        )}
       </div>
     </div>
   );

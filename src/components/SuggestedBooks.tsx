@@ -12,9 +12,8 @@ const SuggestedBooks: React.FC = () => {
       try {
         const response = await fetch('https://us-central1-summaristt.cloudfunctions.net/getBooks?status=suggested');
         const data: Book[] = await response.json();
-        setSuggestedBooks(data.slice(0, 5)); // Only display 5 books at a time
+        setSuggestedBooks(data.slice(0, 5)); 
       } catch (error) {
-        console.error("Error fetching suggested books:", error);
       }
     };
 

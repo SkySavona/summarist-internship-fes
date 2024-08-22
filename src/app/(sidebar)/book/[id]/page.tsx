@@ -18,6 +18,11 @@ import SkeletonBookDetails from "@/components/ui/SkeletonBookDetails";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import usePremiumStatus from "@/stripe/usePremiumStatus";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
+import { getFirebaseApp } from "@/services/firebaseConfig";
+
+const firestore = getFirestore(getFirebaseApp());
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -53,7 +58,6 @@ const BookDetails: React.FC = () => {
         const data: Book = await response.json();
         setBook(data);
       } catch (error) {
-        console.error("Error fetching book details:", error);
         setError("Failed to load book details. Please try again later.");
       }
     };
@@ -74,7 +78,6 @@ const BookDetails: React.FC = () => {
       });
 
       audio.addEventListener("error", () => {
-        console.error("Error loading audio file");
         setAudioDuration("Duration not available");
       });
 
@@ -85,37 +88,60 @@ const BookDetails: React.FC = () => {
   }, [book]);
 
   useEffect(() => {
-    const currentLibrary: Book[] = JSON.parse(localStorage.getItem("myLibrary") || "[]");
-    const isBookInLibrary = currentLibrary.some((savedBook) => savedBook.id === book?.id);
-    setIsBookmarked(isBookInLibrary);
-  }, [book]);
+    if (user && book) {
+      const fetchLibraryStatus = async () => {
+        try {
+          const userLibraryRef = doc(firestore, 'libraries', user.uid);
+          const userLibraryDoc = await getDoc(userLibraryRef);
 
-  const handleAddToLibrary = () => {
-    if (!book) return;
+          if (userLibraryDoc.exists()) {
+            const isBookInLibrary = userLibraryDoc.data()?.books.some(
+              (savedBook: any) => savedBook.id === book.id
+            );
+            setIsBookmarked(isBookInLibrary);
+          }
+        } catch (error) {
+          console.error("Error fetching user library:", error);
+        }
+      };
 
-    let currentLibrary: Book[] = JSON.parse(localStorage.getItem("myLibrary") || "[]");
-
-    if (isBookmarked) {
-      // Remove the book from the library if it is already bookmarked
-      currentLibrary = currentLibrary.filter((savedBook) => savedBook.id !== book.id);
-      setIsBookmarked(false);
-    } else {
-      // Add the book to the library
-      currentLibrary.push(book);
-      setIsBookmarked(true);
+      fetchLibraryStatus();
     }
+  }, [user, book]);
 
-    localStorage.setItem("myLibrary", JSON.stringify(currentLibrary));
+  const handleAddToLibrary = async () => {
+    if (!book || !user) return;
+
+    const userLibraryRef = doc(firestore, 'libraries', user.uid);
+
+    try {
+      const userLibraryDoc = await getDoc(userLibraryRef);
+
+      let currentLibrary = userLibraryDoc.exists()
+        ? userLibraryDoc.data()?.books || []
+        : [];
+
+      if (isBookmarked) {
+        currentLibrary = currentLibrary.filter(
+          (savedBook: any) => savedBook.id !== book.id
+        );
+      } else {
+        currentLibrary.push(book);
+      }
+
+      await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error("Error updating library:", error);
+    }
   };
 
   const handleReadOrListen = () => {
     if (!book) return;
 
     if (book.subscriptionRequired && !isPremium) {
-      // Redirect to subscription plan if required
       router.push("/choose-plan");
     } else {
-      // Allow access to content
       router.push(`/player/${id}`);
     }
   };
@@ -148,7 +174,7 @@ const BookDetails: React.FC = () => {
     <div className="flex flex-1 overflow-hidden h-[100vh]">
       <main className="flex-1 overflow-y-auto p-4">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
-          <div className="pr-2 pb-4  border-b w-full border-gray-200 z-2 relative">
+          <div className="pr-2 pb-4 border-b w-full border-gray-200 z-2 relative">
             <Searchbar />
           </div>
         </motion.div>
@@ -219,7 +245,7 @@ const BookDetails: React.FC = () => {
               >
                 <button
                   onClick={handleReadOrListen}
-                  className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
+                  className="bg-blue-1 text-white  hover:bg-gray-300 transition-colors duration-300 ease-in-out px-4 py-2 rounded-md flex items-center text-sm md:text-base"
                 >
                   <FaBook className="mr-2" />
                   {book.subscriptionRequired && !isPremium
@@ -228,7 +254,7 @@ const BookDetails: React.FC = () => {
                 </button>
                 <button
                   onClick={handleReadOrListen}
-                  className="bg-blue-1 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
+                  className="bg-blue-1   hover:bg-gray-300 transition-colors duration-300 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base"
                 >
                   <FaMicrophone className="mr-2" />
                   {book.subscriptionRequired && !isPremium

@@ -92,11 +92,9 @@ export async function POST(req: Request) {
       await createLibraryDocument(firestore, uid, bookData);
     }
 
-    console.log('Checkout session created:', session.id);
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

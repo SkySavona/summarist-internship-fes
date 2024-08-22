@@ -27,7 +27,7 @@ const LoginButton: React.FC<ButtonProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
-  const [showSignInPopup, setShowSignInPopup] = useState(false); // New state for sign-in popup
+  const [showSignInPopup, setShowSignInPopup] = useState(false); 
   const router = useRouter();
   const pathname = usePathname();
 
@@ -52,7 +52,7 @@ const LoginButton: React.FC<ButtonProps> = ({
 
   const handleLoginSuccess = () => {
     setIsModalOpen(false);
-    setShowSignInPopup(true); // Show sign-in popup
+    setShowSignInPopup(true); 
     setTimeout(() => {
       setShowSignInPopup(false);
     }, 3000);

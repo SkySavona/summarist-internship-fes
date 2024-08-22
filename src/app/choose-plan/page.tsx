@@ -277,7 +277,6 @@ const ChoosePlan: React.FC = () => {
         throw new Error("Failed to load Stripe");
       }
     } catch (error) {
-      console.error("Error creating checkout session:", error);
       setError(
         error instanceof Error ? error.message : "An unknown error occurred"
       );

@@ -66,10 +66,8 @@ const SearchBar: React.FC = () => {
           }));
           setFilteredBooks(formattedBooks);
         } else {
-          console.error("Error fetching books:", response.statusText);
         }
       } catch (error) {
-        console.error("Error fetching books:", error);
       } finally {
         setIsSearching(false);
         setIsDropdownOpen(true);

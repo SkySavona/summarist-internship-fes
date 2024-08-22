@@ -8,11 +8,18 @@ import { Book } from "@/types/index";
 import PlayerPageSidebar from "@/components/PlayerPageSidebar";
 import SearchBar from "@/components/SearchBar";
 import { motion } from "framer-motion";
-import { FaCheck } from "react-icons/fa";
 import usePremiumStatus from "@/stripe/usePremiumStatus";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirebaseAuth } from "@/services/firebaseConfig"; 
 import Link from "next/link";
+import LoginDefault from "@/components/LoginDefault";
+import { FaCheck } from "react-icons/fa";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
+import { getFirebaseApp } from "@/services/firebaseConfig";
+
+const firestore = getFirestore(getFirebaseApp());
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,13 +33,15 @@ const stagger = {
 interface PlayerContentProps {
   book: Book;
   fontSize: string;
-  onMarkAsFinished: () => void;
+  onToggleFinished: () => void;
+  isFinished: boolean;
 }
 
 const PlayerContent: React.FC<PlayerContentProps> = ({
   book,
   fontSize,
-  onMarkAsFinished,
+  onToggleFinished,
+  isFinished,
 }) => (
   <motion.div
     initial="hidden"
@@ -66,11 +75,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
           {book.summary}
         </div>
         <button
-          onClick={onMarkAsFinished}
-          className="bg-green-500 text-white px-4 py-2 rounded-md mt-8 hover:bg-green-600 transition-colors duration-200 flex items-center justify-center mx-auto"
+          onClick={onToggleFinished}
+          className={`${
+            isFinished ? "bg-green-1" : "bg-gray-300"
+          } text-white px-4 py-2 rounded-md mt-8 hover:bg-green-2 transition-colors duration-200 flex items-center justify-center mx-auto`}
         >
-          <FaCheck className="inline-block mr-2" />
-          Mark as Finished
+          {isFinished && <FaCheck className="inline-block mr-2" />}
+          {isFinished ? "Unmark as Finished" : "Mark as Finished"}
         </button>
       </motion.div>
     </main>
@@ -84,6 +95,9 @@ const PlayerPage: React.FC = () => {
   const auth = getFirebaseAuth();
   const [user, loading, error] = useAuthState(auth);
   const isPremium = usePremiumStatus(user || null);
+  const [isFinished, setIsFinished] = useState(false);
+  const [showFinishedPopup, setShowFinishedPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -96,50 +110,73 @@ const PlayerPage: React.FC = () => {
         }
         const data: Book = await response.json();
         setBook(data);
+
+        if (user) {
+          const userLibraryRef = doc(firestore, 'libraries', user.uid);
+          const userLibraryDoc = await getDoc(userLibraryRef);
+
+          if (userLibraryDoc.exists()) {
+            const userLibrary = userLibraryDoc.data()?.books || [];
+            const isBookFinished = userLibrary.some(
+              (savedBook: any) => savedBook.id === data.id && savedBook.finished
+            );
+            setIsFinished(isBookFinished);
+          }
+        }
       } catch (error) {
-        console.error("Error fetching book details:", error);
+        console.error("Failed to load book details or user library:", error);
       }
     };
 
     if (id) {
       fetchBookDetails();
     }
-  }, [id]);
+  }, [id, user]);
 
-  const handleMarkAsFinished = () => {
-    if (!book) return;
+  const handleToggleFinished = async () => {
+    if (!book || !user) return;
 
-    // Retrieve the existing finished books from local storage
-    const existingFinishedBooks = JSON.parse(
-      localStorage.getItem("finishedBooks") || "[]"
-    );
+    const userLibraryRef = doc(firestore, 'libraries', user.uid);
 
-    // Check if the book is already in the finished list
-    const isAlreadyFinished = existingFinishedBooks.some(
-      (savedBook: Book) => savedBook.id === book.id
-    );
+    try {
+      const userLibraryDoc = await getDoc(userLibraryRef);
 
-    if (!isAlreadyFinished) {
+      let currentLibrary = userLibraryDoc.exists()
+        ? userLibraryDoc.data()?.books || []
+        : [];
 
-      const updatedFinishedBooks = [...existingFinishedBooks, book];
-
-     
-      localStorage.setItem(
-        "finishedBooks",
-        JSON.stringify(updatedFinishedBooks)
+      const bookIndex = currentLibrary.findIndex(
+        (savedBook: any) => savedBook.id === book.id
       );
 
-      alert("Book marked as finished!");
-    } else {
-      alert("Book is already marked as finished!");
+      if (bookIndex !== -1) {
+        // Toggle finished status without affecting "Saved" section
+        currentLibrary[bookIndex].finished = !isFinished;
+      } else {
+        // If the book isn't in the library, add it as finished only
+        currentLibrary.push({ ...book, finished: true });
+      }
+
+      await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
+      setIsFinished(!isFinished);
+      setPopupMessage(isFinished ? "Book unmarked as finished!" : "Book marked as finished!");
+      setShowFinishedPopup(true);
+      setTimeout(() => setShowFinishedPopup(false), 3000);
+    } catch (error) {
+      console.error("Error updating finished status:", error);
     }
   };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><LoadingSpinner/></div>;
   }
 
   if (error) {
     return <div>Error: {error.message}</div>;
+  }
+
+  if (!user) {
+    return <LoginDefault onLoginSuccess={() => {}} />;
   }
 
   if (!book) {
@@ -155,7 +192,7 @@ const PlayerPage: React.FC = () => {
         </p>
         <Link
           href="/choose-plan"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          className="bg-green-1 text-white px-4 py-2 rounded hover:bg-green-2 transition-colors ease-in-out"
         >
           Subscribe Now
         </Link>
@@ -171,13 +208,19 @@ const PlayerPage: React.FC = () => {
           <PlayerContent
             book={book}
             fontSize={fontSize}
-            onMarkAsFinished={handleMarkAsFinished}
+            onToggleFinished={handleToggleFinished}
+            isFinished={isFinished}
           />
           <div className="sticky bottom-0 left-0 w-full bg-white z-10">
             <AudioPlayer book={book} />
           </div>
         </div>
       </div>
+      {showFinishedPopup && (
+        <div className="fixed bottom-4 right-4 bg-green-1 text-white p-4 rounded-md shadow-lg z-50">
+          {popupMessage}
+        </div>
+      )}
     </AudioProvider>
   );
 };
