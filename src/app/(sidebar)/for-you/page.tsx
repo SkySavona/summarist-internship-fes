@@ -18,8 +18,7 @@ const ForYou: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200)); // Simulate data fetching delay
-      setIsInitialLoading(false);
+      await new Promise((resolve) => setTimeout(resolve, 200));
     };
 
     fetchData();
@@ -30,7 +29,7 @@ const ForYou: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        delay: 0.8, // Slight delay to smooth the transition
+        delay: 0.8, 
         staggerChildren: 0.3,
         when: "beforeChildren",
       },

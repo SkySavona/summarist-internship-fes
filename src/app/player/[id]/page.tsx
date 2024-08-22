@@ -10,7 +10,7 @@ import SearchBar from "@/components/SearchBar";
 import { motion } from "framer-motion";
 import usePremiumStatus from "@/stripe/usePremiumStatus";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { getFirebaseAuth } from "@/services/firebaseConfig"; 
+import { getFirebaseAuth } from "@/services/firebaseConfig";
 import Link from "next/link";
 import LoginDefault from "@/components/LoginDefault";
 import { FaCheck } from "react-icons/fa";
@@ -60,11 +60,11 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         variants={fadeInUp}
         className="flex-1 overflow-y-auto px-4 md:px-8 py-8"
       >
-     <h1
-  className={`md:text-[34px] text-[28px] text-center font-bold text-blue-1 mb-4 leading-normal md:leading-relaxed ${fontSize}`}
->
-  {book.title}
-</h1>
+        <h1
+          className={`md:text-[34px] text-[28px] text-center font-bold text-blue-1 mb-4 leading-normal md:leading-relaxed ${fontSize}`}
+        >
+          {book.title}
+        </h1>
         <p
           className={`text-lg md:text-xl italic text-blue-1 mb-4 text-center ${fontSize}`}
         >
@@ -112,7 +112,7 @@ const PlayerPage: React.FC = () => {
         setBook(data);
 
         if (user) {
-          const userLibraryRef = doc(firestore, 'libraries', user.uid);
+          const userLibraryRef = doc(firestore, "libraries", user.uid);
           const userLibraryDoc = await getDoc(userLibraryRef);
 
           if (userLibraryDoc.exists()) {
@@ -136,7 +136,7 @@ const PlayerPage: React.FC = () => {
   const handleToggleFinished = async () => {
     if (!book || !user) return;
 
-    const userLibraryRef = doc(firestore, 'libraries', user.uid);
+    const userLibraryRef = doc(firestore, "libraries", user.uid);
 
     try {
       const userLibraryDoc = await getDoc(userLibraryRef);
@@ -150,16 +150,16 @@ const PlayerPage: React.FC = () => {
       );
 
       if (bookIndex !== -1) {
-        // Toggle finished status without affecting "Saved" section
         currentLibrary[bookIndex].finished = !isFinished;
       } else {
-        // If the book isn't in the library, add it as finished only
         currentLibrary.push({ ...book, finished: true });
       }
 
       await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
       setIsFinished(!isFinished);
-      setPopupMessage(isFinished ? "Book unmarked as finished!" : "Book marked as finished!");
+      setPopupMessage(
+        isFinished ? "Book unmarked as finished!" : "Book marked as finished!"
+      );
       setShowFinishedPopup(true);
       setTimeout(() => setShowFinishedPopup(false), 3000);
     } catch (error) {
@@ -168,7 +168,11 @@ const PlayerPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div><LoadingSpinner/></div>;
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (error) {

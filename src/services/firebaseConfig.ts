@@ -17,7 +17,6 @@ let auth: Auth | undefined;
 let db: Firestore | undefined;
 let functions: Functions | undefined;
 
-// Centralized initialization function
 const initializeFirebase = (): void => {
   if (!getApps().length) {
     try {
@@ -30,10 +29,9 @@ const initializeFirebase = (): void => {
         throw new Error("Firebase functions failed to initialize");
       }
 
-      console.log("Firebase initialized successfully");
     } catch (error) {
       console.error("Error initializing Firebase:", error);
-      throw error; // Ensure to fail fast in case of an initialization error
+      throw error; 
     }
   } else {
     app = getApp();
@@ -43,7 +41,6 @@ const initializeFirebase = (): void => {
   }
 };
 
-// Initialize Firebase once at the application start
 initializeFirebase();
 
 if (!functions) {
@@ -52,7 +49,6 @@ if (!functions) {
 
 const googleProvider = new GoogleAuthProvider();
 
-// Stripe extension functions
 const createCheckoutSession = httpsCallable(functions, "ext-firestore-stripe-payments-createCheckoutSession");
 const createPortalLink = httpsCallable(functions, "ext-firestore-stripe-payments-createPortalLink");
 
@@ -67,7 +63,6 @@ export {
   createPortalLink
 };
 
-// Optional helper functions to access Firebase services
 export const getFirebaseApp = (): FirebaseApp => {
   if (!app) {
     throw new Error("Firebase app is not initialized");

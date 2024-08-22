@@ -13,7 +13,7 @@ const Canceled: React.FC = () => {
   };
 
   const handleSupportClick = () => {
-    router.push("/for-you");  // Adjust this route as needed
+    router.push("/for-you");
   };
 
   return (
@@ -25,9 +25,12 @@ const Canceled: React.FC = () => {
         className="flex flex-col items-center mb-8"
       >
         <FaTimesCircle className="text-red-500 text-6xl mb-4" />
-        <h1 className="text-3xl font-bold text-blue-1">Subscription Cancelled</h1>
+        <h1 className="text-3xl font-bold text-blue-1">
+          Subscription Cancelled
+        </h1>
         <p className="text-gray-600 mt-2">
-          We're sorry to see you go. If you have any questions or concerns, please don't hesitate to contact us.
+          We're sorry to see you go. If you have any questions or concerns,
+          please don't hesitate to contact us.
         </p>
       </motion.div>
       <motion.div

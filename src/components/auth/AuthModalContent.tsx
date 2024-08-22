@@ -58,7 +58,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         const authInstance = getFirebaseAuth();
         setAuth(authInstance);
         setIsFirebaseInitialized(true);
-        console.log("Firebase Auth initialized successfully");
       } catch (error) {
         console.error("Error initializing Firebase Auth:", error);
         setError(
@@ -105,26 +104,25 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
           photoURL: user.photoURL || null,
           createdAt: new Date().toISOString(),
         });
-        console.log("User document created successfully");
-        return true; // New user
+        return true; 
       } catch (error) {
         console.error("Error creating user document:", error);
         throw new Error("Failed to create user profile. Please try again.");
       }
     }
-    return false; // Existing user
+    return false; 
   };
 
   const handleSuccessfulAuth = async (user: User, isNewUser: boolean) => {
     try {
       if (isNewUser) {
-        // Handle any additional steps for new users here if needed
+       
       }
       if (onLoginSuccess) {
         onLoginSuccess();
       }
       setIsLoading(false);
-      router.push(returnUrl);  // Ensure that the router push is working
+      router.push(returnUrl);  
     } catch (error) {
       console.error("Error in handleSuccessfulAuth:", error);
       setError("An error occurred during authentication. Please try again.");
@@ -192,10 +190,8 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          // User exists, proceed with login
           await handleSuccessfulAuth(result.user, false);
         } else {
-          // User does not exist, prompt for sign-up
           setPendingGoogleUser(result.user);
           setConfirmGoogleSignUp(true);
           setIsLoading(false);

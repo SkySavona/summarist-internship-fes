@@ -19,7 +19,6 @@ const Help: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Simulate sending email (replace with actual email sending logic)
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
       setToastMessage("Your message was sent successfully");

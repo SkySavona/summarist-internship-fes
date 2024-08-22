@@ -10,11 +10,12 @@ const SuggestedBooks: React.FC = () => {
   useEffect(() => {
     const fetchSuggestedBooks = async () => {
       try {
-        const response = await fetch('https://us-central1-summaristt.cloudfunctions.net/getBooks?status=suggested');
+        const response = await fetch(
+          "https://us-central1-summaristt.cloudfunctions.net/getBooks?status=suggested"
+        );
         const data: Book[] = await response.json();
-        setSuggestedBooks(data.slice(0, 5)); 
-      } catch (error) {
-      }
+        setSuggestedBooks(data.slice(0, 5));
+      } catch (error) {}
     };
 
     fetchSuggestedBooks();
@@ -22,7 +23,9 @@ const SuggestedBooks: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-xl text-blue-1 font-semibold mb-2 mt-8">Suggested Books</h2>
+      <h2 className="text-xl text-blue-1 font-semibold mb-2 mt-8">
+        Suggested Books
+      </h2>
       <p className="text-gray-600 mb-4">Browse these books</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {suggestedBooks.map((book) => (
