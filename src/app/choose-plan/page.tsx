@@ -241,7 +241,6 @@ const ChoosePlan: React.FC = () => {
   
       const { sessionId } = await response.json();
   
-      // Dynamically load the correct Stripe key
       const stripeKey = process.env.NODE_ENV === "production"
         ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || ""
         : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || "";

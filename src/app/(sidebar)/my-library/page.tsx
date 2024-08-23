@@ -45,7 +45,6 @@ const MyLibrary: React.FC = () => {
             setFinishedBooks([]);
           }
         } catch (error) {
-          console.error("Error fetching library:", error);
         }
       };
 

@@ -30,7 +30,6 @@ const initializeFirebase = (): void => {
       }
 
     } catch (error) {
-      console.error("Error initializing Firebase:", error);
       throw error; 
     }
   } else {

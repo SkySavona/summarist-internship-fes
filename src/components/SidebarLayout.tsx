@@ -56,10 +56,8 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
           setShowSignOutPopup(false);
         }, 3000);
       } else {
-        console.error("Auth object is undefined");
       }
     } catch (error) {
-      console.error("Error signing out:", error);
     } finally {
       setIsSigningOut(false);
     }

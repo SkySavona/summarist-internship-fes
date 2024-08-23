@@ -59,7 +59,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         setAuth(authInstance);
         setIsFirebaseInitialized(true);
       } catch (error) {
-        console.error("Error initializing Firebase Auth:", error);
         setError(
           "Failed to initialize authentication. Please try again later."
         );
@@ -77,7 +76,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
           setIsLoading(false);
         },
         (error) => {
-          console.error("Auth state change error:", error);
           setAuthError(
             "An error occurred during authentication. Please try again."
           );
@@ -106,7 +104,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         });
         return true;
       } catch (error) {
-        console.error("Error creating user document:", error);
         throw new Error("Failed to create user profile. Please try again.");
       }
     }
@@ -123,7 +120,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       setIsLoading(false);
       router.push(returnUrl);
     } catch (error) {
-      console.error("Error in handleSuccessfulAuth:", error);
       setError("An error occurred during authentication. Please try again.");
       setIsLoading(false);
     }
@@ -132,7 +128,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -165,7 +160,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         await handleForgotPassword();
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -173,7 +167,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleGoogleAuth = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -200,7 +193,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         }
       }
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
       setError(
         error.message || "An error occurred during sign-in. Please try again."
       );
@@ -216,7 +208,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         await handleSuccessfulAuth(pendingGoogleUser, true);
         setConfirmGoogleSignUp(false);
       } catch (error) {
-        console.error("Sign-Up Error:", error);
         setError(
           (error as Error).message ||
             "An error occurred during sign-up. Please try again."
@@ -228,7 +219,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleGuestLogin = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -242,7 +232,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       const isNewUser = await createUserDocument(result.user);
       await handleSuccessfulAuth(result.user, isNewUser);
     } catch (error: any) {
-      console.error("Guest login error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -250,7 +239,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleForgotPassword = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -264,7 +252,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       setResetEmailSent(true);
       setIsLoading(false);
     } catch (error: any) {
-      console.error("Password reset error:", error);
       setError(error.message);
       setIsLoading(false);
     }

@@ -124,7 +124,6 @@ const PlayerPage: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("Failed to load book details or user library:", error);
       }
     };
 
@@ -163,7 +162,6 @@ const PlayerPage: React.FC = () => {
       setShowFinishedPopup(true);
       setTimeout(() => setShowFinishedPopup(false), 3000);
     } catch (error) {
-      console.error("Error updating finished status:", error);
     }
   };
 
