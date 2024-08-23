@@ -12,6 +12,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "body-parser", "express", "serve-static"] ,
     "plugins": [
       {
         "name": "next"

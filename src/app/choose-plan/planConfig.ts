@@ -2,7 +2,7 @@
 
 const env = process.env.NODE_ENV || 'development';
 
-const config = {
+const config: { [key: string]: { plans: { id: number; name: string; description: string; price: string; stripeProductId: string; stripePriceId: string; }[]; } } = {
   development: {
     plans: [
       {

@@ -5,7 +5,7 @@ import Stripe from "stripe";
 
 // Dynamic configuration based on environment
 const env = process.env.NODE_ENV || 'development';
-const config = {
+const config: { [key: string]: any } = {
   development: {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY_TEST,
     stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
@@ -102,6 +102,25 @@ async function createLibraryDocument(
   }
 }
 
+async function ensureUserDocumentExists(firestore: any, uid: string, userData: any) {
+  try {
+    console.log(`ensureUserDocumentExists: Checking existence of user document for UID: ${uid}`);
+    const userRef = firestore.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      console.log(`ensureUserDocumentExists: User document not found. Creating new document for UID: ${uid}`);
+      await userRef.set(userData);
+      console.log(`ensureUserDocumentExists: User document created for UID: ${uid}`);
+    } else {
+      console.log(`ensureUserDocumentExists: User document already exists for UID: ${uid}`);
+    }
+  } catch (error) {
+    console.error(`ensureUserDocumentExists: Failed to ensure user document for UID: ${uid}:`, error);
+    throw new Error(`Failed to ensure user document for ${uid}`);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json();
@@ -135,12 +154,17 @@ export async function POST(req: Request) {
     console.log("POST: Firestore initialized.");
 
     const userDoc = await firestore.collection("users").doc(uid).get();
-    const userData = userDoc.data();
-    console.log("POST: Retrieved user data:", userData);
+    let userData = userDoc.data();
 
+    // Ensure the user document exists in Firestore
     if (!userData) {
-      console.error("POST: User not found for UID:", uid);
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      console.log(`POST: User document not found for UID: ${uid}. Creating a new user document.`);
+      userData = {
+        email: "user@example.com", // Replace with actual email or fetch from request if available
+        createdAt: FieldValue.serverTimestamp(),
+        // other default data as necessary
+      };
+      await ensureUserDocumentExists(firestore, uid, userData);
     }
 
     let customerId = userData.stripeCustomerId;

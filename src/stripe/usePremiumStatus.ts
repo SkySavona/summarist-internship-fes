@@ -15,7 +15,10 @@ export default function usePremiumStatus(user: User | null) {
       const unsubscribe = onSnapshot(userRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const userData = docSnapshot.data();
-          setPremiumStatus(userData.subscriptionStatus === 'active');
+          setPremiumStatus(
+            userData.subscriptionStatus === 'active' || 
+            userData.subscriptionStatus === 'trialing'
+          );
         } else {
           setPremiumStatus(false);
         }
