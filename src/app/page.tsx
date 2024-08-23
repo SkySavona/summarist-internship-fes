@@ -127,9 +127,9 @@ export default function Home() {
                 In Less Time
               </h1>
               <p className="text-lg sm:text-xl text-[#394547] font-light mb-6 leading-relaxed">
-                Great summaries for busy people,
+                Great summaries for busy people,&nbsp;
                 <br className="hidden md:inline-block" />
-                individuals who barely have time to read,
+                individuals who barely have time to read,&nbsp;
                 <br className="hidden md:inline-block" />
                 and even people who don't like to read.
               </p>
@@ -201,19 +201,18 @@ export default function Home() {
         </div>
       </motion.section>
 
-
       <motion.section
         ref={statisticsRef}
         initial="hidden"
         animate={statisticsInView ? "visible" : "hidden"}
         variants={stagger}
-        className="w-full py-32 bg-[#f1f6f4]"
+        className="w-full py-16 bg-[#f1f6f4]"
       >
         <div className="max-w-[1280px] w-full mx-auto px-8">
           <div className="flex flex-col md:flex-row gap-20">
             <motion.div
               variants={fadeInUp}
-              className="flex flex-col justify-center md:w-1/2"
+              className="flex flex-col justify-center md:w-1/2 order-last md:order-first"
             >
               {highlights1.map((text, index) => (
                 <motion.h3
@@ -231,7 +230,7 @@ export default function Home() {
             </motion.div>
             <motion.div
               variants={fadeInUp}
-              className="flex flex-col justify-center bg-white p-8 md:w-1/2 rounded-lg"
+              className="flex flex-col justify-center bg-white p-8 md:w-1/2 rounded-lg order-first md:order-last"
             >
               <div className="mb-8">
                 <div className="flex">
@@ -273,13 +272,13 @@ export default function Home() {
         initial="hidden"
         animate={statisticsInView ? "visible" : "hidden"}
         variants={stagger}
-        className="w-full py-32 bg-[#f1f6f4]"
+        className="w-full py-16 bg-[#f1f6f4]"
       >
         <div className="max-w-[1280px] w-full mx-auto px-8">
           <div className="flex flex-col md:flex-row gap-20">
             <motion.div
               variants={fadeInUp}
-              className="flex flex-col justify-center bg-white p-8 md:w-1/2 rounded-lg"
+              className="flex flex-col justify-center bg-white p-8 md:w-1/2 rounded-lg order-last md:order-first"
             >
               <div className="mb-8">
                 <div className="flex">
@@ -317,13 +316,13 @@ export default function Home() {
             </motion.div>
             <motion.div
               variants={fadeInUp}
-              className="flex flex-col text-right justify-center md:w-1/2"
+              className="flex flex-col justify-center md:w-1/2 order-first md:order-last"
             >
               {highlights2.map((text, index) => (
                 <motion.h3
                   key={index}
                   variants={fadeInUp}
-                  className={`text-3xl font-medium mb-6 transition-colors duration-300 ${
+                  className={`text-3xl font-medium text-right mb-6 transition-colors duration-300 ${
                     index === highlightIndex2
                       ? "text-[#2bd97c]"
                       : "text-[#6b757b]"
