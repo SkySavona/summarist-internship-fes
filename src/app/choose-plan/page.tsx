@@ -15,6 +15,7 @@ import Image from "next/image";
 import AuthModal from "@/components/auth/AuthModal";
 import Footer from "@/components/layout/Footer";
 import { accordionData, AccordionItem } from "@/constants/accordion";
+import { plans } from "./planConfig"; // Import the dynamic plans configuration
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,7 +27,7 @@ const stagger = {
 };
 
 interface Plan {
-  stripeProductId: any;
+  stripeProductId: string;
   id: number;
   name: string;
   description: string;
@@ -163,25 +164,6 @@ const ChoosePlan: React.FC = () => {
     triggerOnce: true,
     threshold: 0.1,
   });
-
-  const plans: Plan[] = [
-    {
-      id: 1,
-      name: "Premium Plus Yearly",
-      description: "7-day free trial included.",
-      price: "99.99/year",
-      stripeProductId: "prod_Qh49vea9psPMhn",
-      stripePriceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr",
-    },
-    {
-      id: 2,
-      name: "Premium Monthly",
-      description: "No trial included.",
-      price: "9.99/month",
-      stripeProductId: "prod_Qh4Ak2lhk3ZvIi",
-      stripePriceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux",
-    },
-  ];
 
   useEffect(() => {
     const auth = getFirebaseAuth();

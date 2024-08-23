@@ -1,23 +1,25 @@
 import * as admin from "firebase-admin";
 
-const serviceAccountConfig = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? (JSON.parse(
-      process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-    ) as admin.ServiceAccount)
-  : undefined;
-
 let adminApp: admin.app.App;
 
 export const getFirebaseAdmin = () => {
   if (!admin.apps.length) {
-    if (!serviceAccountConfig) {
+    // Ensure all required environment variables are present
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+    if (!projectId || !privateKey || !clientEmail) {
       throw new Error("Firebase service account configuration is missing.");
     }
 
     adminApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountConfig),
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`,
+      credential: admin.credential.cert({
+        projectId: projectId,
+        clientEmail: clientEmail,
+        privateKey: privateKey,
+      }),
+      databaseURL: `https://${projectId}.firebaseio.com`,
     });
   } else {
     adminApp = admin.app();
