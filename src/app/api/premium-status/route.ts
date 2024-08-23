@@ -15,16 +15,14 @@ export async function GET(req: Request) {
     const uid = decodedToken.uid;
 
     const firestore = getFirestore(getFirebaseAdmin());
-    const customerDoc = await firestore.collection('customers').doc(uid).get();
-    const customerData = customerDoc.data();
+    const userDoc = await firestore.collection('users').doc(uid).get();
+    const userData = userDoc.data();
 
-    let isPremium = false;
-    if (customerData?.subscriptions) {
-      const activeSubscription = Object.values(customerData.subscriptions).find(
-        (sub: any) => sub.status === 'active' || sub.status === 'trialing'
-      );
-      isPremium = !!activeSubscription;
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    const isPremium = userData.subscriptionStatus === 'active' || userData.subscriptionStatus === 'trialing';
 
     return NextResponse.json({ isPremium });
   } catch (error) {

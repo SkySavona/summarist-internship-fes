@@ -41,10 +41,8 @@ const LoginButton: React.FC<ButtonProps> = ({
           setShowSignOutPopup(false);
         }, 3000);
       } else {
-        console.error("Auth object is undefined");
       }
     } catch (error) {
-      console.error("Error signing out:", error);
     } finally {
       setIsSigningOut(false);
     }

@@ -101,7 +101,6 @@ const BookDetails: React.FC = () => {
             setIsBookmarked(isBookInLibrary);
           }
         } catch (error) {
-          console.error("Error fetching user library:", error);
         }
       };
 
@@ -132,7 +131,6 @@ const BookDetails: React.FC = () => {
       await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
       setIsBookmarked(!isBookmarked);
     } catch (error) {
-      console.error("Error updating library:", error);
     }
   };
 

@@ -19,23 +19,22 @@ const MyLibrary: React.FC = () => {
   const [user, loading] = useAuthState(auth);
   const [library, setLibrary] = useState<Book[]>([]);
   const [finishedBooks, setFinishedBooks] = useState<Book[]>([]);
-  const [hydrated, setHydrated] = useState(false); // Track if hydration has occurred
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true); // Mark as hydrated on client side
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (user && hydrated) {
       const fetchLibrary = async () => {
         try {
-          const userLibraryRef = doc(firestore, 'libraries', user.uid);
+          const userLibraryRef = doc(firestore, "libraries", user.uid);
           const userLibraryDoc = await getDoc(userLibraryRef);
 
           if (userLibraryDoc.exists()) {
             const allBooks = userLibraryDoc.data()?.books || [];
 
-            // Separate the books into finished and unfinished categories
             const finished = allBooks.filter((book: any) => book.finished);
             const unfinished = allBooks.filter((book: any) => !book.finished);
 
@@ -46,7 +45,6 @@ const MyLibrary: React.FC = () => {
             setFinishedBooks([]);
           }
         } catch (error) {
-          console.error("Error fetching library:", error);
         }
       };
 
@@ -55,7 +53,11 @@ const MyLibrary: React.FC = () => {
   }, [user, hydrated]);
 
   if (loading || !hydrated) {
-    return <div><LoadingSpinner /></div>; // Ensure spinner shows until hydrated
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (!user) {

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import {
@@ -48,7 +48,7 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
   const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialView);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
+
   const [confirmGoogleSignUp, setConfirmGoogleSignUp] = useState(false);
   const [pendingGoogleUser, setPendingGoogleUser] = useState<User | null>(null);
 
@@ -58,9 +58,7 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         const authInstance = getFirebaseAuth();
         setAuth(authInstance);
         setIsFirebaseInitialized(true);
-        console.log("Firebase Auth initialized successfully");
       } catch (error) {
-        console.error("Error initializing Firebase Auth:", error);
         setError(
           "Failed to initialize authentication. Please try again later."
         );
@@ -78,7 +76,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
           setIsLoading(false);
         },
         (error) => {
-          console.error("Auth state change error:", error);
           setAuthError(
             "An error occurred during authentication. Please try again."
           );
@@ -105,28 +102,24 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
           photoURL: user.photoURL || null,
           createdAt: new Date().toISOString(),
         });
-        console.log("User document created successfully");
-        return true; // New user
+        return true;
       } catch (error) {
-        console.error("Error creating user document:", error);
         throw new Error("Failed to create user profile. Please try again.");
       }
     }
-    return false; // Existing user
+    return false;
   };
 
   const handleSuccessfulAuth = async (user: User, isNewUser: boolean) => {
     try {
       if (isNewUser) {
-        // Handle any additional steps for new users here if needed
       }
       if (onLoginSuccess) {
         onLoginSuccess();
       }
       setIsLoading(false);
-      router.push(returnUrl);  // Ensure that the router push is working
+      router.push(returnUrl);
     } catch (error) {
-      console.error("Error in handleSuccessfulAuth:", error);
       setError("An error occurred during authentication. Please try again.");
       setIsLoading(false);
     }
@@ -135,7 +128,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -168,7 +160,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         await handleForgotPassword();
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -176,15 +167,17 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleGoogleAuth = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
     setIsLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider.setCustomParameters({
-        prompt: "select_account"
-      }));
+      const result = await signInWithPopup(
+        auth,
+        googleProvider.setCustomParameters({
+          prompt: "select_account",
+        })
+      );
 
       if (result.user) {
         const db = getFirebaseDb();
@@ -192,17 +185,14 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          // User exists, proceed with login
           await handleSuccessfulAuth(result.user, false);
         } else {
-          // User does not exist, prompt for sign-up
           setPendingGoogleUser(result.user);
           setConfirmGoogleSignUp(true);
           setIsLoading(false);
         }
       }
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
       setError(
         error.message || "An error occurred during sign-in. Please try again."
       );
@@ -218,9 +208,9 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
         await handleSuccessfulAuth(pendingGoogleUser, true);
         setConfirmGoogleSignUp(false);
       } catch (error) {
-        console.error("Sign-Up Error:", error);
         setError(
-          (error as Error).message || "An error occurred during sign-up. Please try again."
+          (error as Error).message ||
+            "An error occurred during sign-up. Please try again."
         );
         setIsLoading(false);
       }
@@ -229,7 +219,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleGuestLogin = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -243,7 +232,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       const isNewUser = await createUserDocument(result.user);
       await handleSuccessfulAuth(result.user, isNewUser);
     } catch (error: any) {
-      console.error("Guest login error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -251,7 +239,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
 
   const handleForgotPassword = async () => {
     if (!auth) {
-      console.error("Auth is not initialized");
       setError("Authentication is not ready. Please try again.");
       return;
     }
@@ -265,7 +252,6 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       setResetEmailSent(true);
       setIsLoading(false);
     } catch (error: any) {
-      console.error("Password reset error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -419,44 +405,49 @@ const AuthModalContent: React.FC<AuthModalContentProps> = ({
       {confirmGoogleSignUp && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">
-            <p>You don't have an account yet. Would you like to sign up using your Google account?</p>
-            <div className="mt-4 flex justify-end">
+            <p>
+              You don't have an account yet. Would you like to sign up using
+              your Google account?
+            </p>
+            <div className="mt-4 flex justify-center">
               <button
-               className="bg-green-1 hover:bg-green-2 transition-colors duration-300 ease-in-out text-white px-4 py-2 rounded mr-2"
-               onClick={handleGoogleSignUpConfirm}
-             >
-               Yes, Sign Me Up
-             </button>
-             <button
-               className="bg-red-500 hover:bg-red-700 transition-color duration-300 ease-in-out text-white px-4 py-2 rounded"
-               onClick={() => {
-                 setConfirmGoogleSignUp(false);
-                 if (auth) {
-                   auth.signOut();
-                 }
-                 setError("Sign up cancelled. You can try again or use a different method to sign in.");
-               }}
-             >
-               No, Cancel
-             </button>
-           </div>
-         </div>
-       </div>
-     )}
+                className="bg-green-1 hover:bg-green-2 transition-colors duration-300 ease-in-out text-white px-4 py-2 rounded mr-2"
+                onClick={handleGoogleSignUpConfirm}
+              >
+                Yes, Sign Me Up
+              </button>
+              <button
+                className="bg-red-500 hover:bg-red-700 transition-color duration-300 ease-in-out text-white px-4 py-2 rounded"
+                onClick={() => {
+                  setConfirmGoogleSignUp(false);
+                  if (auth) {
+                    auth.signOut();
+                  }
+                  setError(
+                    "Sign up cancelled. You can try again or use a different method to sign in."
+                  );
+                }}
+              >
+                No, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-     {showSuccessModal && (
-       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-         <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">
-           <div className="text-green-500 text-5xl mb-4">✓</div>
-           <h2 className="text-2xl font-bold mb-4">
-             Thank you for signing up!
-           </h2>
-           <p>You will be redirected shortly...</p>
-         </div>
-       </div>
-     )}
-   </Suspense>
- );
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">
+            <div className="text-green-500 text-5xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold mb-4">
+              Thank you for signing up!
+            </h2>
+            <p>You will be redirected shortly...</p>
+          </div>
+        </div>
+      )}
+    </Suspense>
+  );
 };
 
 export default AuthModalContent;

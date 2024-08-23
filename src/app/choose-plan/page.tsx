@@ -15,6 +15,7 @@ import Image from "next/image";
 import AuthModal from "@/components/auth/AuthModal";
 import Footer from "@/components/layout/Footer";
 import { accordionData, AccordionItem } from "@/constants/accordion";
+import { plans } from "./planConfig"; 
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,7 +27,7 @@ const stagger = {
 };
 
 interface Plan {
-  stripeProductId: any;
+  stripeProductId: string;
   id: number;
   name: string;
   description: string;
@@ -164,25 +165,6 @@ const ChoosePlan: React.FC = () => {
     threshold: 0.1,
   });
 
-  const plans: Plan[] = [
-    {
-      id: 1,
-      name: "Premium Plus Yearly",
-      description: "7-day free trial included.",
-      price: "99.99/year",
-      stripeProductId: "prod_Qh49vea9psPMhn",
-      stripePriceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr",
-    },
-    {
-      id: 2,
-      name: "Premium Monthly",
-      description: "No trial included.",
-      price: "9.99/month",
-      stripeProductId: "prod_Qh4Ak2lhk3ZvIi",
-      stripePriceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux",
-    },
-  ];
-
   useEffect(() => {
     const auth = getFirebaseAuth();
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -217,33 +199,33 @@ const ChoosePlan: React.FC = () => {
       setShowAuthModal(true);
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-
-      const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
-
+  
+      const selectedPlanData = plans.find((plan: { id: number; }) => plan.id === selectedPlan);
+  
       if (!selectedPlanData) {
         throw new Error("Selected plan not found");
       }
-
+  
       const bookData = JSON.parse(localStorage.getItem("selectedBook") || "{}");
-
+  
       const requestBody: any = {
         priceId: selectedPlanData.stripePriceId,
         success_url: window.location.origin + "/confirmation",
         cancel_url: window.location.origin + "/canceled",
         uid: user.uid,
       };
-
+  
       if (bookData && bookData.id && bookData.title) {
         requestBody.bookData = {
           id: bookData.id,
           title: bookData.title,
         };
       }
-
+  
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: {
@@ -251,17 +233,20 @@ const ChoosePlan: React.FC = () => {
         },
         body: JSON.stringify(requestBody),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to create checkout session");
       }
-
+  
       const { sessionId } = await response.json();
-
-      const stripe = await loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-      );
+  
+      const stripeKey = process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || ""
+        : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || "";
+      
+      const stripe = await loadStripe(stripeKey);
+  
       if (stripe) {
         const { error } = await stripe.redirectToCheckout({ sessionId });
         if (error) {

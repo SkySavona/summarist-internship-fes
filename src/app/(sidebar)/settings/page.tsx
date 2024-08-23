@@ -5,10 +5,9 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import Searchbar from "@/components/SearchBar";
-import LoginDefault from "@/components/LoginDefault"; // Import your custom LoginDefault component
+import LoginDefault from "@/components/LoginDefault";
 import Link from "next/link";
 
-// Define the type for the user document
 interface UserDocument {
   firebaseRole: string;
   email: string;
@@ -17,7 +16,8 @@ interface UserDocument {
 const Settings: React.FC = () => {
   const auth = getFirebaseAuth();
   const [user] = useAuthState(auth);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<string>("Loading...");
+  const [subscriptionPlan, setSubscriptionPlan] =
+    useState<string>("Loading...");
   const [userEmail, setUserEmail] = useState<string>("Loading...");
 
   useEffect(() => {
@@ -54,9 +54,13 @@ const Settings: React.FC = () => {
   }, [user]);
 
   if (!user) {
-    return <LoginDefault onLoginSuccess={function (): void {
-      throw new Error("Function not implemented.");
-    } } />; // Use your custom LoginDefault component when the user is not logged in
+    return (
+      <LoginDefault
+        onLoginSuccess={function (): void {
+          throw new Error("Function not implemented.");
+        }}
+      />
+    );
   }
 
   return (

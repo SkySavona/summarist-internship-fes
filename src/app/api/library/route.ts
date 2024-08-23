@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'Library updated successfully' });
   } catch (error) {
-    console.error('Error updating user library:', error);
     return NextResponse.json({ message: 'Failed to update library' }, { status: 500 });
   }
 }
@@ -56,7 +55,6 @@ export async function GET(request: NextRequest) {
     const books = userLibraryDoc.data()?.books || [];
     return NextResponse.json({ books });
   } catch (error) {
-    console.error('Error fetching user library:', error);
     return NextResponse.json({ message: 'Failed to fetch library' }, { status: 500 });
   }
 }

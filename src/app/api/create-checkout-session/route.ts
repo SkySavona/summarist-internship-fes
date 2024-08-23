@@ -1,78 +1,170 @@
-import { NextResponse } from 'next/server';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getFirebaseAdmin } from '@/services/firebaseAdmin';
-import Stripe from 'stripe';
+import { NextResponse } from "next/server";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirebaseAdmin } from "@/services/firebaseAdmin";
+import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
+const env = process.env.NODE_ENV || "development";
+const config: { [key: string]: any } = {
+  development: {
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY_TEST,
+    stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
+    products: {
+      premiumMonthly: {
+        priceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux", // test premium monthly
+        productId: "prod_Qh4Ak2lhk3ZvIi",
+      },
+      premiumYearly: {
+        priceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr", // test premium yearly
+        productId: "prod_Qh49vea9psPMhn",
+      },
+    },
+  },
+  production: {
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY_LIVE,
+    stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE,
+    products: {
+      premiumMonthly: {
+        priceId: "price_1PpsV3RpLrmHfjrM9Cq0K4we", // live premium monthly
+        productId: "prod_QhOCBH8vWYXTOI",
+      },
+      premiumYearly: {
+        priceId: "price_1PpsU8RpLrmHfjrMNkKbH9yl", // live premium yearly
+        productId: "prod_QhOBQAMoYtGNRg",
+      },
+    },
+  },
+  test: {
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY_TEST,
+    stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
+    products: {
+      premiumMonthly: {
+        priceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux", // test premium monthly
+        productId: "prod_Qh4Ak2lhk3ZvIi",
+      },
+      premiumYearly: {
+        priceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr", // test premium yearly
+        productId: "prod_Qh49vea9psPMhn",
+      },
+    },
+  },
+};
+
+const stripe = new Stripe(config[env].stripeSecretKey ?? "", {
+  apiVersion: "2024-06-20",
+});
 
 async function updateUserDocument(firestore: any, uid: string, data: any) {
-  const userRef = firestore.collection('users').doc(uid);
-  await userRef.set(data, { merge: true });
+  try {
+    const userRef = firestore.collection("users").doc(uid);
+    await userRef.set(data, { merge: true });
+  } catch (error) {
+    throw new Error(`Failed to update user document for ${uid}`);
+  }
 }
 
-async function createLibraryDocument(firestore: any, uid: string, bookData: any) {
-  const libraryRef = firestore.collection('library').doc(uid);
-  await libraryRef.set({
-    books: [{
-      bookId: bookData.id,
-      title: bookData.title,
-      subscriptionRequired: true,
-      addedAt: FieldValue.serverTimestamp()
-    }]
-  }, { merge: true });
+async function createLibraryDocument(
+  firestore: any,
+  uid: string,
+  bookData: any
+) {
+  try {
+    const libraryRef = firestore.collection("library").doc(uid);
+    await libraryRef.set(
+      {
+        books: [
+          {
+            bookId: bookData.id,
+            title: bookData.title,
+            subscriptionRequired: true,
+            addedAt: FieldValue.serverTimestamp(),
+          },
+        ],
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    throw new Error(`Failed to create library document for ${uid}`);
+  }
+}
+
+async function ensureUserDocumentExists(
+  firestore: any,
+  uid: string,
+  userData: any
+) {
+  try {
+    const userRef = firestore.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      await userRef.set(userData);
+    } else {
+    }
+  } catch (error) {
+    throw new Error(`Failed to ensure user document for ${uid}`);
+  }
 }
 
 export async function POST(req: Request) {
   try {
-    const { priceId, success_url, cancel_url, uid, bookData } = await req.json();
+    const requestBody = await req.json();
+
+    const { priceId, success_url, cancel_url, uid, bookData } = requestBody;
 
     if (!priceId || !success_url || !uid) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required parameters" },
+        { status: 400 }
+      );
     }
 
     const firestore = getFirestore(getFirebaseAdmin());
 
-    // Get user data
-    const userDoc = await firestore.collection('users').doc(uid).get();
-    const userData = userDoc.data();
+    const userDoc = await firestore.collection("users").doc(uid).get();
+    let userData = userDoc.data();
 
     if (!userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      userData = {
+        email: "user@example.com",
+        createdAt: FieldValue.serverTimestamp(),
+      };
+      await ensureUserDocumentExists(firestore, uid, userData);
     }
 
-    // Check if user already has a Stripe customer ID
     let customerId = userData.stripeCustomerId;
 
     if (!customerId) {
-      // Create a new Stripe customer
       const customer = await stripe.customers.create({
         email: userData.email,
-        metadata: { firebaseUID: uid }
+        metadata: { firebaseUID: uid },
       });
       customerId = customer.id;
 
-      // Update user document with Stripe customer ID
-      await updateUserDocument(firestore, uid, { stripeCustomerId: customerId });
+      await updateUserDocument(firestore, uid, {
+        stripeCustomerId: customerId,
+      });
     }
 
-    // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
+      mode: "subscription",
+      payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url,
       cancel_url,
-      metadata: bookData ? { bookId: bookData.id, bookTitle: bookData.title } : undefined,
+      metadata: bookData
+        ? { bookId: bookData.id, bookTitle: bookData.title }
+        : undefined,
     });
 
-    // Determine the role based on the subscription
-    let firebaseRole = "Basic"; // Default role
-    if (priceId === "price_1Ppg1XRpLrmHfjrMuDkIbZGr" || priceId === "price_1Ppg2VRpLrmHfjrMN3kq31Ux") {  // Check for both Premium plans
+    let firebaseRole = "Basic";
+    if (
+      priceId === config[env].products.premiumMonthly.priceId ||
+      priceId === config[env].products.premiumYearly.priceId
+    ) {
       firebaseRole = "Premium";
     }
 
-    // Update user document with session information, subscription status, and role
     await updateUserDocument(firestore, uid, {
       latestCheckoutSession: {
         sessionId: session.id,
@@ -82,19 +174,20 @@ export async function POST(req: Request) {
         success_url,
         cancel_url,
       },
-      subscriptionStatus: 'active', // Set subscription status to active
-      subscriptionPriceId: priceId, // Store the price ID of the subscription
-      firebaseRole: firebaseRole // Set the firebaseRole field based on the subscription
+      subscriptionStatus: "active",
+      subscriptionPriceId: priceId,
+      firebaseRole: firebaseRole,
     });
 
-    // If bookData is provided, create or update the library document
     if (bookData) {
       await createLibraryDocument(firestore, uid, bookData);
     }
 
-
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

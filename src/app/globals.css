@@ -2,10 +2,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'slick-carousel/slick/slick.css';
-@import 'slick-carousel/slick/slick-theme.css';
 
-/* Original CSS Given */
 * {
   margin: 0;
   padding: 0;
