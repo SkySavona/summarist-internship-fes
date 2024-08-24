@@ -122,16 +122,16 @@ export default function Home() {
               variants={fadeInUp}
               className="text-center md:text-left md:w-1/2"
             >
-              <h1 className="text-3xl sm:text-4xl font-bold text-[#032b41] mb-6 pt-8 sm:pt-0">
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#032b41] mb-6 sm:pt-0">
                 Gain More Knowledge <br className="hidden md:inline-block" />
-                In Less Time
+                in Less Time
               </h1>
               <p className="text-lg sm:text-xl text-[#394547] font-light mb-6 leading-relaxed">
                 Great summaries for busy people,&nbsp;
                 <br className="hidden md:inline-block" />
-                individuals who barely have time to read,&nbsp;
+                those with little time,&nbsp;
                 <br className="hidden md:inline-block" />
-                and even people who don't like to read.
+                and even those who don't enjoy reading.
               </p>
               <div className="flex justify-center md:justify-start">
                 <SignUpButton>Sign Up</SignUpButton>
@@ -165,10 +165,10 @@ export default function Home() {
             variants={fadeInUp}
             className="text-2xl sm:text-3xl font-bold text-center text-[#032b41] mb-12 sm:mb-20"
           >
-            Understand books in few minutes
+            Understand Books in a Few Minutes
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-16 mb-16 sm:mb-24">
-            {["Read or listen", "Find your next read", "Briefcasts"].map(
+            {["Read or Listen", "Find Your Next Read", "Briefcasts"].map(
               (title, index) => (
                 <motion.div
                   key={index}
@@ -346,7 +346,7 @@ export default function Home() {
         <div className="max-w-[1280px] w-full mx-auto px-8">
           <motion.h2
             variants={fadeInUp}
-            className="text-3xl font-bold text-center text-[#032b41] mb-20"
+            className="text-3xl font-bold text-center text-[#032b41] mb-8"
           >
             What Our Members Say
           </motion.h2>
@@ -409,14 +409,14 @@ export default function Home() {
         initial="hidden"
         animate={numbersInView ? "visible" : "hidden"}
         variants={stagger}
-        className="w-full py-32"
+        className="w-full py-16"
       >
         <div className="max-w-[1280px] w-full mx-auto px-8">
           <motion.h2
             variants={fadeInUp}
-            className="text-3xl font-bold text-center text-[#032b41] mb-20"
+            className="text-3xl font-bold text-center text-[#032b41] mb-8"
           >
-            Start Growing With Summarist Now
+            Start Growing With Summarist <span className="italic text-green-1">Now</span>
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
             {[
@@ -428,8 +428,13 @@ export default function Home() {
               {
                 icon: (
                   <>
+                  <div className="flex-row flex text-[32px] gap-2 p-2">
+                    <BsStarFill />
+                    <BsStarFill />
+                    <BsStarFill />
                     <BsStarFill />
                     <BsStarHalf />
+                    </div>
                   </>
                 ),
                 number: "4.5 Stars",
@@ -444,7 +449,7 @@ export default function Home() {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="bg-[#d7e9ff] flex flex-col items-center text-center p-8 rounded-lg"
+                className="bg-[#d7e9ff] flex flex-col items-center text-center p-8 mb-8 rounded-lg"
               >
                 <div className="text-6xl text-[#0365f2] mb-4">{item.icon}</div>
                 <div className="text-4xl font-bold text-[#032b41] mb-4">
