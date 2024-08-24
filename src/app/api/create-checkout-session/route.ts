@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/services/firebaseAdmin";
 import Stripe from "stripe";
-import { FieldValue } from "firebase-admin/firestore";
+import fetch from "node-fetch";
+import { google } from "googleapis";
 
 const env = process.env.NODE_ENV || "development";
 console.log(`[ENV] Current environment: ${env}`);
@@ -36,7 +36,6 @@ const config: { [key: string]: any } = {
     },
   },
 };
-
 console.log(`[STRIPE] Secret Key: ${config[env].stripeSecretKey}`);
 console.log(`[STRIPE] Publishable Key: ${config[env].stripePublishableKey}`);
 
@@ -44,58 +43,77 @@ const stripe = new Stripe(config[env].stripeSecretKey ?? "", {
   apiVersion: "2024-06-20",
 });
 
-async function updateUserDocument(firestore: any, uid: string, data: any) {
-  try {
-    console.log(`[FIRESTORE] Updating user document for UID: ${uid} with data:`, data);
-    const userRef = firestore.collection("users").doc(uid);
-    await userRef.set(data, { merge: true });
-    console.log(`[FIRESTORE] User document updated successfully for UID: ${uid}`);
-  } catch (error) {
-    console.error(`[FIRESTORE] Failed to update user document for UID: ${uid}`, error);
-    throw new Error(`Failed to update user document for ${uid}`);
-  }
+async function getAccessToken() {
+  const scopes = [
+    "https://www.googleapis.com/auth/datastore"
+  ];
+  const jwtClient = new google.auth.JWT(
+    process.env.FIREBASE_CLIENT_EMAIL,
+    undefined,
+    process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    scopes
+  );
+  const tokens = await jwtClient.authorize();
+  return tokens.access_token;
 }
 
-async function createLibraryDocument(firestore: any, uid: string, bookData: any) {
-  try {
-    console.log(`[FIRESTORE] Creating library document for UID: ${uid} with book data:`, bookData);
-    const libraryRef = firestore.collection("library").doc(uid);
-    await libraryRef.set(
-      {
-        books: [
-          {
-            bookId: bookData.id,
-            title: bookData.title,
-            subscriptionRequired: true,
-            addedAt: FieldValue.serverTimestamp(),
-          },
-        ],
+async function firestoreRequest(method: string, path: string, body?: any) {
+  const accessToken = await getAccessToken();
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+  const url = `${baseUrl}${path}`;
+  
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Firestore API error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function getUserDocument(uid: string) {
+  console.log(`[FIRESTORE] Fetching user document for UID: ${uid}`);
+  const response = await firestoreRequest('GET', `/users/${uid}`);
+  console.log("[FIRESTORE] Fetched user document:", response);
+  return response.fields;
+}
+
+async function updateUserDocument(uid: string, data: any) {
+  console.log(`[FIRESTORE] Updating user document for UID: ${uid} with data:`, data);
+  await firestoreRequest('PATCH', `/users/${uid}`, {
+    fields: data,
+  });
+  console.log(`[FIRESTORE] User document updated successfully for UID: ${uid}`);
+}
+
+async function createLibraryDocument(uid: string, bookData: any) {
+  console.log(`[FIRESTORE] Creating library document for UID: ${uid} with book data:`, bookData);
+  await firestoreRequest('PATCH', `/library/${uid}`, {
+    fields: {
+      books: {
+        arrayValue: {
+          values: [{
+            mapValue: {
+              fields: {
+                bookId: { stringValue: bookData.id },
+                title: { stringValue: bookData.title },
+                subscriptionRequired: { booleanValue: true },
+                addedAt: { timestampValue: new Date().toISOString() },
+              },
+            },
+          }],
+        },
       },
-      { merge: true }
-    );
-    console.log(`[FIRESTORE] Library document created successfully for UID: ${uid}`);
-  } catch (error) {
-    console.error(`[FIRESTORE] Failed to create library document for UID: ${uid}`, error);
-    throw new Error(`Failed to create library document for ${uid}`);
-  }
-}
-
-async function ensureUserDocumentExists(firestore: any, uid: string, userData: any) {
-  try {
-    console.log(`[FIRESTORE] Ensuring user document exists for UID: ${uid}`);
-    const userRef = firestore.collection("users").doc(uid);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      console.log(`[FIRESTORE] User document does not exist for UID: ${uid}. Creating new document.`);
-      await userRef.set(userData);
-    } else {
-      console.log(`[FIRESTORE] User document already exists for UID: ${uid}`);
-    }
-  } catch (error) {
-    console.error(`[FIRESTORE] Failed to ensure user document for UID: ${uid}`, error);
-    throw new Error(`Failed to ensure user document for ${uid}`);
-  }
+    },
+  });
+  console.log(`[FIRESTORE] Library document created successfully for UID: ${uid}`);
 }
 
 export async function POST(req: Request) {
@@ -114,39 +132,30 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("[FIRESTORE] Getting Firestore instance");
-    const firestore = getAdminFirestore();
-    console.log("[FIRESTORE] Firestore instance obtained successfully");
-
-    console.log(`[FIRESTORE] Fetching user document for UID: ${uid}`);
-    const userDoc = await firestore.collection("users").doc(uid).get();
-    let userData = userDoc.data();
-    console.log("[FIRESTORE] Fetched user document:", userData);
+    let userData = await getUserDocument(uid);
 
     if (!userData) {
       console.log(`[FIRESTORE] User data is missing for UID: ${uid}. Creating new user data.`);
       userData = {
-        email: "user@example.com",
-        createdAt: FieldValue.serverTimestamp(),
+        email: { stringValue: "user@example.com" },
+        createdAt: { timestampValue: new Date().toISOString() },
       };
-      await ensureUserDocumentExists(firestore, uid, userData);
-      console.log(`[FIRESTORE] New user data created for UID: ${uid}`);
+      await updateUserDocument(uid, userData);
     }
 
-    let customerId = userData.stripeCustomerId;
+    let customerId = userData.stripeCustomerId?.stringValue;
 
     if (!customerId) {
       console.log(`[STRIPE] Stripe customer ID not found for UID: ${uid}. Creating new Stripe customer.`);
       const customer = await stripe.customers.create({
-        email: userData.email,
+        email: userData.email.stringValue,
         metadata: { firebaseUID: uid },
       });
       customerId = customer.id;
       console.log(`[STRIPE] Created new Stripe customer with ID: ${customerId}`);
 
-      console.log(`[FIRESTORE] Updating user document with Stripe customer ID`);
-      await updateUserDocument(firestore, uid, {
-        stripeCustomerId: customerId,
+      await updateUserDocument(uid, {
+        stripeCustomerId: { stringValue: customerId },
       });
     }
 
@@ -173,24 +182,26 @@ export async function POST(req: Request) {
     }
     console.log(`[API] Determined Firebase role: ${firebaseRole}`);
 
-    console.log("[FIRESTORE] Updating user document with checkout session info");
-    await updateUserDocument(firestore, uid, {
+    await updateUserDocument(uid, {
       latestCheckoutSession: {
-        sessionId: session.id,
-        created: FieldValue.serverTimestamp(),
-        mode: session.mode,
-        priceId,
-        success_url,
-        cancel_url,
+        mapValue: {
+          fields: {
+            sessionId: { stringValue: session.id },
+            created: { timestampValue: new Date().toISOString() },
+            mode: { stringValue: session.mode },
+            priceId: { stringValue: priceId },
+            success_url: { stringValue: success_url },
+            cancel_url: { stringValue: cancel_url },
+          },
+        },
       },
-      subscriptionStatus: "active",
-      subscriptionPriceId: priceId,
-      firebaseRole: firebaseRole,
+      subscriptionStatus: { stringValue: "active" },
+      subscriptionPriceId: { stringValue: priceId },
+      firebaseRole: { stringValue: firebaseRole },
     });
 
     if (bookData) {
-      console.log("[FIRESTORE] Creating library document with book data");
-      await createLibraryDocument(firestore, uid, bookData);
+      await createLibraryDocument(uid, bookData);
     }
 
     console.log("[API] Returning successful response with session ID:", session.id);
@@ -198,7 +209,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("[API] Detailed error in create-checkout-session:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: (error as Error).message },
+      { error: "Internal Server Error", details: (error as any).message },
       { status: 500 }
     );
   }

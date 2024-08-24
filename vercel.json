@@ -1,6 +1,6 @@
 {
     "functions": {
-      "app/api/**/*.[jt]s": {
+      "api/**/*.[jt]s": {
         "memory": 1024,
         "maxDuration": 30
       }
