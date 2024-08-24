@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { getFirebaseAdmin } from "@/services/firebaseAdmin";
+import { getAdminFirestore } from "@/services/firebaseAdmin";
 import Stripe from "stripe";
+import { FieldValue } from "firebase-admin/firestore";
 
 const env = process.env.NODE_ENV || "development";
 console.log(`[ENV] Current environment: ${env}`);
@@ -12,11 +12,11 @@ const config: { [key: string]: any } = {
     stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
     products: {
       premiumMonthly: {
-        priceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux", // test premium monthly
+        priceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux",
         productId: "prod_Qh4Ak2lhk3ZvIi",
       },
       premiumYearly: {
-        priceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr", // test premium yearly
+        priceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr",
         productId: "prod_Qh49vea9psPMhn",
       },
     },
@@ -26,26 +26,12 @@ const config: { [key: string]: any } = {
     stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE,
     products: {
       premiumMonthly: {
-        priceId: "price_1PpsV3RpLrmHfjrM9Cq0K4we", // live premium monthly
+        priceId: "price_1PpsV3RpLrmHfjrM9Cq0K4we",
         productId: "prod_QhOCBH8vWYXTOI",
       },
       premiumYearly: {
-        priceId: "price_1PpsU8RpLrmHfjrMNkKbH9yl", // live premium yearly
+        priceId: "price_1PpsU8RpLrmHfjrMNkKbH9yl",
         productId: "prod_QhOBQAMoYtGNRg",
-      },
-    },
-  },
-  test: {
-    stripeSecretKey: process.env.STRIPE_SECRET_KEY_TEST,
-    stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
-    products: {
-      premiumMonthly: {
-        priceId: "price_1Ppg2VRpLrmHfjrMN3kq31Ux", // test premium monthly
-        productId: "prod_Qh4Ak2lhk3ZvIi",
-      },
-      premiumYearly: {
-        priceId: "price_1Ppg1XRpLrmHfjrMuDkIbZGr", // test premium yearly
-        productId: "prod_Qh49vea9psPMhn",
       },
     },
   },
@@ -54,16 +40,9 @@ const config: { [key: string]: any } = {
 console.log(`[STRIPE] Secret Key: ${config[env].stripeSecretKey}`);
 console.log(`[STRIPE] Publishable Key: ${config[env].stripePublishableKey}`);
 
-let stripe: Stripe;
-try {
-  stripe = new Stripe(config[env].stripeSecretKey ?? "", {
-    apiVersion: "2024-06-20",
-  });
-  console.log("[STRIPE] Stripe instance created successfully");
-} catch (error) {
-  console.error("[STRIPE] Error creating Stripe instance:", error);
-  throw error;
-}
+const stripe = new Stripe(config[env].stripeSecretKey ?? "", {
+  apiVersion: "2024-06-20",
+});
 
 async function updateUserDocument(firestore: any, uid: string, data: any) {
   try {
@@ -77,11 +56,7 @@ async function updateUserDocument(firestore: any, uid: string, data: any) {
   }
 }
 
-async function createLibraryDocument(
-  firestore: any,
-  uid: string,
-  bookData: any
-) {
+async function createLibraryDocument(firestore: any, uid: string, bookData: any) {
   try {
     console.log(`[FIRESTORE] Creating library document for UID: ${uid} with book data:`, bookData);
     const libraryRef = firestore.collection("library").doc(uid);
@@ -105,11 +80,7 @@ async function createLibraryDocument(
   }
 }
 
-async function ensureUserDocumentExists(
-  firestore: any,
-  uid: string,
-  userData: any
-) {
+async function ensureUserDocumentExists(firestore: any, uid: string, userData: any) {
   try {
     console.log(`[FIRESTORE] Ensuring user document exists for UID: ${uid}`);
     const userRef = firestore.collection("users").doc(uid);
@@ -143,12 +114,8 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("[FIREBASE] Initializing Firebase Admin");
-    const firebaseAdmin = getFirebaseAdmin();
-    console.log("[FIREBASE] Firebase Admin initialized successfully");
-
     console.log("[FIRESTORE] Getting Firestore instance");
-    const firestore = getFirestore(firebaseAdmin);
+    const firestore = getAdminFirestore();
     console.log("[FIRESTORE] Firestore instance obtained successfully");
 
     console.log(`[FIRESTORE] Fetching user document for UID: ${uid}`);

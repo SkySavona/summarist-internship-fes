@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { getFirestore } from 'firebase-admin/firestore';
 
 let adminApp: admin.app.App;
 
@@ -12,16 +13,38 @@ export const getFirebaseAdmin = () => {
       throw new Error("Firebase service account configuration is missing.");
     }
 
-    adminApp = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: projectId,
-        clientEmail: clientEmail,
-        privateKey: privateKey,
-      }),
-      databaseURL: `https://${projectId}.firebaseio.com`,
-    });
+    try {
+      adminApp = admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: projectId,
+          clientEmail: clientEmail,
+          privateKey: privateKey,
+        }),
+        databaseURL: `https://${projectId}.firebaseio.com`,
+      });
+
+      // Initialize Firestore with explicit settings
+      const db = getFirestore(adminApp);
+      db.settings({ 
+        ignoreUndefinedProperties: true,
+        ssl: true,
+        customHeaders: {
+          'User-Agent': 'Vercel/Serverless'
+        }
+      });
+
+      console.log("Firebase Admin SDK initialized successfully with custom settings");
+    } catch (error) {
+      console.error("Error initializing Firebase Admin SDK:", error);
+      throw error;
+    }
   } else {
     adminApp = admin.app();
   }
   return adminApp;
+};
+
+export const getAdminFirestore = () => {
+  const app = getFirebaseAdmin();
+  return getFirestore(app);
 };
