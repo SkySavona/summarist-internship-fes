@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import fetch from "node-fetch";
+import axios from "axios";
 import { google } from "googleapis";
 
 const env = process.env.NODE_ENV || "development";
@@ -36,6 +36,8 @@ const config: { [key: string]: any } = {
     },
   },
 };
+
+
 console.log(`[STRIPE] Secret Key: ${config[env].stripeSecretKey}`);
 console.log(`[STRIPE] Publishable Key: ${config[env].stripePublishableKey}`);
 
@@ -44,9 +46,7 @@ const stripe = new Stripe(config[env].stripeSecretKey ?? "", {
 });
 
 async function getAccessToken() {
-  const scopes = [
-    "https://www.googleapis.com/auth/datastore"
-  ];
+  const scopes = ["https://www.googleapis.com/auth/datastore"];
   const jwtClient = new google.auth.JWT(
     process.env.FIREBASE_CLIENT_EMAIL,
     undefined,
@@ -57,25 +57,26 @@ async function getAccessToken() {
   return tokens.access_token;
 }
 
-async function firestoreRequest(method: string, path: string, body?: any) {
+async function firestoreRequest(method: string, path: string, data?: any) {
   const accessToken = await getAccessToken();
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
   const url = `${baseUrl}${path}`;
   
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Firestore API error: ${response.statusText}`);
+  try {
+    const response = await axios({
+      method,
+      url,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      data,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Firestore API error:`, ((error as any).response?.data || (error as any).message) as any);
+    throw error;
   }
-
-  return response.json();
 }
 
 async function getUserDocument(uid: string) {
@@ -87,9 +88,7 @@ async function getUserDocument(uid: string) {
 
 async function updateUserDocument(uid: string, data: any) {
   console.log(`[FIRESTORE] Updating user document for UID: ${uid} with data:`, data);
-  await firestoreRequest('PATCH', `/users/${uid}`, {
-    fields: data,
-  });
+  await firestoreRequest('PATCH', `/users/${uid}`, { fields: data });
   console.log(`[FIRESTORE] User document updated successfully for UID: ${uid}`);
 }
 
