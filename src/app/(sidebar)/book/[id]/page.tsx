@@ -110,54 +110,60 @@ const BookDetails: React.FC = () => {
     }
   }, [book]);
 
+  const handleAddToLibrary = async () => {
+    if (!book || !user) return;
+  
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/library', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          book: {
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            imageLink: book.imageLink
+          },
+          action: isBookmarked ? 'remove' : 'add'
+        })
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update library');
+      }
+  
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error("Error updating library:", error);
+    }
+  };
+  
   useEffect(() => {
-    if (user && book) {
-      const fetchLibraryStatus = async () => {
+    const fetchLibraryStatus = async () => {
+      if (user && book) {
         try {
-          const userLibraryRef = doc(firestore, "library", user.uid);
-          const userLibraryDoc = await getDoc(userLibraryRef);
-
-          if (userLibraryDoc.exists()) {
-            const isBookInLibrary = userLibraryDoc.data()?.books.some(
-              (savedBook: any) => savedBook.id === book.id
-            );
-            setIsBookmarked(isBookInLibrary);
-          }
+          const token = await user.getIdToken();
+          const response = await fetch(`/api/library`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const data = await response.json();
+          const isBookInLibrary = data.books.some((savedBook: any) => savedBook.id === book.id);
+          setIsBookmarked(isBookInLibrary);
         } catch (error) {
           console.error("Error fetching library status:", error);
         }
-      };
-
-      fetchLibraryStatus();
-    }
-  }, [user, book]);
-
-  const handleAddToLibrary = async () => {
-    if (!book || !user) return;
-
-    const userLibraryRef = doc(firestore, 'library', user.uid);
-
-    try {
-      const userLibraryDoc = await getDoc(userLibraryRef);
-
-      let currentLibrary = userLibraryDoc.exists()
-        ? userLibraryDoc.data()?.books || []
-        : [];
-
-      if (isBookmarked) {
-        currentLibrary = currentLibrary.filter(
-          (savedBook: any) => savedBook.id !== book.id
-        );
-      } else {
-        currentLibrary.push(book);
       }
-
-      await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
-      setIsBookmarked(!isBookmarked);
-    } catch (error) {
-    }
-  };
-
+    };
+  
+    fetchLibraryStatus();
+  }, [user, book]);
+  
   const handleReadOrListen = () => {
     if (!book) return;
 
