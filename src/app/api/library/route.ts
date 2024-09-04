@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const userLibraryRef = doc(firestore, 'libraries', userId);
+    const userLibraryRef = doc(firestore, 'library', userId);
     const userLibraryDoc = await getDoc(userLibraryRef);
 
     let currentLibrary = userLibraryDoc.exists() ? userLibraryDoc.data()?.books || [] : [];
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const userLibraryRef = doc(firestore, 'libraries', userId);
+    const userLibraryRef = doc(firestore, 'library', userId);
     const userLibraryDoc = await getDoc(userLibraryRef);
 
     if (!userLibraryDoc.exists()) {

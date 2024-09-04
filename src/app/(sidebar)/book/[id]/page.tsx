@@ -17,7 +17,6 @@ import { motion } from "framer-motion";
 import SkeletonBookDetails from "@/components/ui/SkeletonBookDetails";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
-import usePremiumStatus from "@/stripe/usePremiumStatus";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { getFirebaseApp } from "@/services/firebaseConfig";
@@ -42,7 +41,31 @@ const BookDetails: React.FC = () => {
   const [audioDuration, setAudioDuration] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
-  const isPremium = usePremiumStatus(user || null);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUserSubscription = async () => {
+      if (user) {
+        console.log("Fetching user subscription for UID:", user.uid);
+        try {
+          const response = await fetch('/api/premium-status', {
+            headers: {
+              'Authorization': `Bearer ${await user.getIdToken()}`
+            }
+          });
+          const data = await response.json();
+          console.log("Premium status response:", data);
+          setIsPremium(data.isPremium);
+        } catch (error) {
+          console.error("Error fetching premium status:", error);
+        }
+      }
+    };
+
+    if (user) {
+      fetchUserSubscription();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -91,7 +114,7 @@ const BookDetails: React.FC = () => {
     if (user && book) {
       const fetchLibraryStatus = async () => {
         try {
-          const userLibraryRef = doc(firestore, 'libraries', user.uid);
+          const userLibraryRef = doc(firestore, "library", user.uid);
           const userLibraryDoc = await getDoc(userLibraryRef);
 
           if (userLibraryDoc.exists()) {
@@ -101,6 +124,7 @@ const BookDetails: React.FC = () => {
             setIsBookmarked(isBookInLibrary);
           }
         } catch (error) {
+          console.error("Error fetching library status:", error);
         }
       };
 
@@ -111,7 +135,7 @@ const BookDetails: React.FC = () => {
   const handleAddToLibrary = async () => {
     if (!book || !user) return;
 
-    const userLibraryRef = doc(firestore, 'libraries', user.uid);
+    const userLibraryRef = doc(firestore, 'library', user.uid);
 
     try {
       const userLibraryDoc = await getDoc(userLibraryRef);
@@ -137,9 +161,14 @@ const BookDetails: React.FC = () => {
   const handleReadOrListen = () => {
     if (!book) return;
 
+    console.log("Book subscription required:", book.subscriptionRequired);
+    console.log("User premium status:", isPremium);
+
     if (book.subscriptionRequired && !isPremium) {
+      console.log("Redirecting to choose-plan page");
       router.push("/choose-plan");
     } else {
+      console.log("Navigating to player page");
       router.push(`/player/${id}`);
     }
   };

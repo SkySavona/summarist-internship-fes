@@ -16,6 +16,9 @@ import AuthModal from "@/components/auth/AuthModal";
 import Footer from "@/components/layout/Footer";
 import { accordionData, AccordionItem } from "@/constants/accordion";
 import { plans } from "./planConfig"; 
+import { doc, onSnapshot, getFirestore } from "firebase/firestore";
+
+const db = getFirestore();
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -204,7 +207,7 @@ const ChoosePlan: React.FC = () => {
       setLoading(true);
       setError(null);
   
-      const selectedPlanData = plans.find((plan: { id: number; }) => plan.id === selectedPlan);
+      const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
   
       if (!selectedPlanData) {
         throw new Error("Selected plan not found");
@@ -239,22 +242,26 @@ const ChoosePlan: React.FC = () => {
         throw new Error(errorData.error || "Failed to create checkout session");
       }
   
-      const { sessionId } = await response.json();
+      const { docId } = await response.json();
+
+      // Listen for session ID creation in Firestore
+      const checkoutSessionRef = doc(db, `users/${user.uid}/checkout_sessions/${docId}`);
+      onSnapshot(checkoutSessionRef, async (doc: { data: () => any; }) => {
+        const sessionData = doc.data();
+        if (sessionData && sessionData.sessionId) {
+          const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+          const stripe = await loadStripe(stripeKey);
   
-      const stripeKey = process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || ""
-        : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || "";
-      
-      const stripe = await loadStripe(stripeKey);
-  
-      if (stripe) {
-        const { error } = await stripe.redirectToCheckout({ sessionId });
-        if (error) {
-          setError(error.message || null);
+          if (stripe) {
+            const { error } = await stripe.redirectToCheckout({ sessionId: sessionData.sessionId });
+            if (error) {
+              setError(error.message || null);
+            }
+          } else {
+            throw new Error("Failed to load Stripe");
+          }
         }
-      } else {
-        throw new Error("Failed to load Stripe");
-      }
+      });
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "An unknown error occurred"
