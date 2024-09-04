@@ -47,16 +47,16 @@ interface PlanProps {
 const Plan: React.FC<PlanProps> = ({ plan, isSelected, onSelect }) => (
   <motion.div
     variants={fadeInUp}
-    className={`relative border p-6 md:p-8 rounded-[5px] mb-6 ${
+    className={`relative border p-6 md:p-8 rounded-[5px] mb-6 cursor-pointer ${
       isSelected ? "border-green-1 bg-green-1 bg-opacity-10" : "border-gray-300"
     }`}
+    onClick={onSelect}
   >
     <div className="flex items-center justify-between mb-4">
       <div
-        className={`w-6 h-6 border-2 rounded-full mr-4 flex items-center justify-center cursor-pointer ${
+        className={`w-6 h-6 border-2 rounded-full mr-4 flex items-center justify-center ${
           isSelected ? "border-green-1" : "border-gray-300"
         }`}
-        onClick={onSelect}
       >
         {isSelected && <div className="w-3 h-3 bg-green-1 rounded-full"></div>}
       </div>
@@ -150,6 +150,7 @@ const ChoosePlan: React.FC = () => {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -204,7 +205,7 @@ const ChoosePlan: React.FC = () => {
     }
   
     try {
-      setLoading(true);
+      setCheckoutLoading(true);
       setError(null);
   
       const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
@@ -221,6 +222,10 @@ const ChoosePlan: React.FC = () => {
         cancel_url: window.location.origin + "/canceled",
         uid: user.uid,
       };
+  
+      if (selectedPlanData.name === "Premium Plus Yearly") {
+        requestBody.trial_period_days = 7;
+      }
   
       if (bookData && bookData.id && bookData.title) {
         requestBody.bookData = {
@@ -243,31 +248,29 @@ const ChoosePlan: React.FC = () => {
       }
   
       const { docId } = await response.json();
-
-      // Listen for session ID creation in Firestore
-      const checkoutSessionRef = doc(db, `users/${user.uid}/checkout_sessions/${docId}`);
-      onSnapshot(checkoutSessionRef, async (doc: { data: () => any; }) => {
+  
+      const checkoutSessionRef = doc(
+        db,
+        `users/${user.uid}/checkout_sessions/${docId}`
+      );
+      onSnapshot(checkoutSessionRef, async (doc: { data: () => any }) => {
         const sessionData = doc.data();
         if (sessionData && sessionData.sessionId) {
           const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
           const stripe = await loadStripe(stripeKey);
   
           if (stripe) {
-            const { error } = await stripe.redirectToCheckout({ sessionId: sessionData.sessionId });
-            if (error) {
-              setError(error.message || null);
-            }
+            await stripe.redirectToCheckout({
+              sessionId: sessionData.sessionId,
+            });
           } else {
             throw new Error("Failed to load Stripe");
           }
         }
       });
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      setCheckoutLoading(false);
     }
   };
 
@@ -278,7 +281,7 @@ const ChoosePlan: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center ">
+      <div className="flex justify-center items-center h-screen">
         <LoadingSpinner />
       </div>
     );
@@ -289,6 +292,12 @@ const ChoosePlan: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {checkoutLoading && (
+        <div className="fixed inset-0 bg-white  flex items-center justify-center z-50">
+          <LoadingSpinner />
+          <p className="ml-2 text-lg font-semibold text-gray-700">Preparing your checkout...</p>
+        </div>
+      )}
       <main className="flex-grow">
         <motion.section
           ref={plansRef}
@@ -369,63 +378,71 @@ const ChoosePlan: React.FC = () => {
               Choose The Plan That Fits You
             </motion.h2>
             <motion.div variants={fadeInUp}>
-              <Plans
-                plans={plans}
-                selectedPlan={selectedPlan}
-                setSelectedPlan={setSelectedPlan}
-              />
+              <div className="cursor-pointer">
+                <Plans
+                  plans={plans}
+                  selectedPlan={selectedPlan}
+                  setSelectedPlan={setSelectedPlan}
+                />
+              </div>
             </motion.div>
           </div>
           <div
             ref={buttonRef}
             className={`bg-white text-center h-28 w-full flex flex-col items-center justify-center ${
               isButtonSticky
-                ? "fixed bottom-0 left-0 right-0"
-                : "absolute bottom-0 left-0 right-0"
-            }`}
-            style={{
-              zIndex: 10,
-            }}
-          >
-            <button
-              onClick={() => handleSubscription()}
-              className="bg-green-1 text-white hover:bg-green-2 transition-colors duration-300 ease-in-out px-6 py-3 rounded-lg text-lg md:text-xl font-semibold"
-              disabled={loading}
-            >
-              {loading ? <LoadingSpinner /> : buttonText}
-            </button>
-            <p className="mt-4 text-xs md:text-sm text-gray-2">
-              {selectedPlan === 2
-                ? "Subscribe now and start your journey!"
-                : "Cancel your trial at any time before it ends, and you won't be charged."}
-            </p>
-          </div>
-        </motion.section>
-
-        <motion.section
-          ref={accordionRef}
-          initial="hidden"
-          animate={accordionInView ? "visible" : "hidden"}
-          variants={stagger}
-          className="py-20"
+              ? "fixed bottom-0 left-0 right-0"
+              : "absolute bottom-0 left-0 right-0"
+          }`}
+          style={{
+            zIndex: 10,
+          }}
         >
-          <div className="container mx-auto px-4">
-            <Accordion items={accordionData} />
-          </div>
-        </motion.section>
-      </main>
+          <button
+            onClick={() => handleSubscription()}
+            className="bg-green-1 text-white hover:bg-green-2 transition-colors duration-300 ease-in-out px-6 py-3 rounded-lg text-lg md:text-xl font-semibold"
+            disabled={checkoutLoading}
+          >
+            {checkoutLoading ? <LoadingSpinner /> : buttonText}
+          </button>
+          <p className="mt-4 text-xs md:text-sm text-gray-2">
+            {selectedPlan === 2
+              ? "Subscribe now and start your journey!"
+              : "Cancel your trial at any time before it ends, and you won't be charged."}
+          </p>
+        </div>
+      </motion.section>
 
-      <Footer />
+      <motion.section
+        ref={accordionRef}
+        initial="hidden"
+        animate={accordionInView ? "visible" : "hidden"}
+        variants={stagger}
+        className="py-20"
+      >
+        <div className="container mx-auto px-4">
+          <Accordion items={accordionData} />
+        </div>
+      </motion.section>
+    </main>
 
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onLoginSuccess={onLoginSuccess}
-        />
-      )}
-    </div>
-  );
+    <Footer />
+
+    {showAuthModal && (
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={onLoginSuccess}
+      />
+    )}
+
+    {error && (
+      <div className="fixed bottom-0 left-0 right-0 bg-red-500 text-white p-4 text-center">
+        {error}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default ChoosePlan;

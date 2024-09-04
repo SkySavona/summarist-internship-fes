@@ -45,10 +45,11 @@ export async function GET(req: Request) {
       const subData = doc.data();
       console.log('Subscription data:', subData);
 
-      if (subData.role === 'Premium' && subData.status === 'active') {
+      // Consider users with either an "active" or "trialing" subscription as Premium
+      if (subData.role === 'Premium' && (subData.status === 'active' || subData.status === 'trialing')) {
         isPremium = true;
         activeSubscription = subData;
-        console.log('Active Premium subscription found');
+        console.log(`User is in a ${subData.status} subscription period`);
         break;
       }
     }
@@ -56,8 +57,13 @@ export async function GET(req: Request) {
     console.log('Is user Premium:', isPremium);
 
     if (!activeSubscription) {
-      console.log('No active Premium subscription found');
+      console.log('No active or trialing Premium subscription found');
       return NextResponse.json({ isPremium: false });
+    }
+
+    let trialEnd = null;
+    if (activeSubscription.status === 'trialing' && activeSubscription.trial_end) {
+      trialEnd = new Date(activeSubscription.trial_end.seconds * 1000).toISOString();
     }
 
     return NextResponse.json({
@@ -65,6 +71,7 @@ export async function GET(req: Request) {
       subscriptionStatus: activeSubscription.status,
       subscriptionId: activeSubscription.id || 'unknown',
       subscriptionName: activeSubscription.items[0]?.price.product.name || 'Premium Subscription',
+      trialEnd: trialEnd
     });
 
   } catch (error) {
