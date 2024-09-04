@@ -108,10 +108,8 @@ const PlayerPage: React.FC = () => {
             }
           });
           const data = await response.json();
-          console.log("Premium status response:", data);
           setIsPremium(data.isPremium);
         } catch (error) {
-          console.error("Error fetching premium status:", error);
         }
       }
     };
@@ -131,7 +129,6 @@ const PlayerPage: React.FC = () => {
         const data: Book = await response.json();
         setBook(data);
       } catch (error) {
-        console.error("Error fetching book details:", error);
       }
     };
 
@@ -152,7 +149,6 @@ const PlayerPage: React.FC = () => {
           setIsFinished(isBookFinished);
         }
       }, (error) => {
-        console.error("Error fetching library status:", error);
       });
 
       return () => unsubscribe();
@@ -188,7 +184,6 @@ const PlayerPage: React.FC = () => {
       setShowFinishedPopup(true);
       setTimeout(() => setShowFinishedPopup(false), 3000);
     } catch (error) {
-      console.error("Error updating library:", error);
     }
   };
 

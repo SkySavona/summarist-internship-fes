@@ -26,7 +26,7 @@ exports.getBook = functions.https.onRequest(async (req, res) => {
         res.status(200).json(bookData);
     }
     catch (error) {
-        console.error("Error fetching book:", error);
+        
         res.status(500).json({ error: "Failed to fetch book details" });
     }
 });
@@ -34,17 +34,15 @@ app.post("/handleStripeWebhook", async (req, res) => {
     const sig = req.headers["stripe-signature"];
     const webhookSecret = functions.config().stripe.webhook_secret;
     if (!req.body || !sig || !webhookSecret) {
-        console.error("Invalid request, missing body, signature, or webhook secret");
+        
         res.status(400).send("Invalid request, missing body, signature, or webhook secret");
         return;
     }
     let event;
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-        console.log("Webhook event constructed:", event);
     }
     catch (err) {
-        console.error("Webhook signature verification failed:", err.message);
         res.status(400).send(`Webhook Error: ${err.message}`);
         return;
     }
@@ -52,7 +50,6 @@ app.post("/handleStripeWebhook", async (req, res) => {
     const eventData = event.data.object;
     try {
         if (eventType === "invoice.payment_succeeded") {
-            console.log("Handling invoice.payment_succeeded event");
             const invoice = eventData;
             const customerId = invoice.customer;
             const userQuery = firestore
@@ -66,16 +63,13 @@ app.post("/handleStripeWebhook", async (req, res) => {
                     subscriptionStatus: "active",
                     stripeSubscriptionId: invoice.subscription,
                 });
-                console.log("Subscription status updated to 'active' for Customer ID:", customerId);
             }
             else {
-                console.error("No user found for Customer ID:", customerId);
             }
         }
         res.json({ received: true });
     }
     catch (error) {
-        console.error("Error handling Stripe webhook:", error);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -88,10 +82,8 @@ exports.createCustomer = functions.auth.user().onCreate(async (user) => {
         await firestore.collection("users").doc(user.uid).set({
             stripeCustomerId: customer.id,
         }, { merge: true });
-        console.log(`Stripe customer created: ${customer.id} for user ${user.uid}`);
     }
     catch (error) {
-        console.error("Error creating Stripe customer:", error);
     }
 });
 exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
@@ -117,7 +109,6 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         return { id: session.id };
     }
     catch (error) {
-        console.error("Error creating Checkout session:", error);
         throw new functions.https.HttpsError("internal", "Unable to create Checkout session");
     }
 });
@@ -140,7 +131,6 @@ exports.createPortalLink = functions.https.onCall(async (data, context) => {
         return { url: session.url };
     }
     catch (error) {
-        console.error("Error creating Portal session:", error);
         throw new functions.https.HttpsError("internal", "Unable to create Portal session");
     }
 });
@@ -151,10 +141,8 @@ exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
     if (customerId) {
         try {
             await stripe.customers.del(customerId);
-            console.log(`Stripe customer deleted: ${customerId} for user ${user.uid}`);
         }
         catch (error) {
-            console.error("Error deleting Stripe customer:", error);
         }
     }
 });
@@ -166,11 +154,9 @@ exports.onCustomerDataDeleted = functions.firestore
     if (customerId) {
         try {
             await stripe.customers.del(customerId);
-            console.log(`Stripe customer deleted: ${customerId} for user ` +
-                `${context.params.userId}`);
+           
         }
         catch (error) {
-            console.error("Error deleting Stripe customer:", error);
         }
     }
 });

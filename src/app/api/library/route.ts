@@ -9,13 +9,11 @@ export async function POST(request: NextRequest) {
   try {
     const { book, action } = await request.json();
     
-    // Get the Authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ message: 'Missing or invalid authorization header' }, { status: 401 });
     }
     
-    // Extract and verify the token
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await getAuth(getFirebaseAdmin()).verifyIdToken(token);
     const userId = decodedToken.uid;
@@ -41,20 +39,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'Library updated successfully' });
   } catch (error) {
-    console.error('Error updating library:', error);
     return NextResponse.json({ message: 'Failed to update library' }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the Authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ message: 'Missing or invalid authorization header' }, { status: 401 });
     }
     
-    // Extract and verify the token
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await getAuth(getFirebaseAdmin()).verifyIdToken(token);
     const userId = decodedToken.uid;
@@ -69,7 +64,6 @@ export async function GET(request: NextRequest) {
     const books = userLibraryDoc.data()?.books || [];
     return NextResponse.json({ books });
   } catch (error) {
-    console.error('Error fetching library:', error);
     return NextResponse.json({ message: 'Failed to fetch library' }, { status: 500 });
   }
 }

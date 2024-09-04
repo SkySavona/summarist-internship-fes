@@ -44,8 +44,7 @@ const MyLibrary: React.FC = () => {
             setLibrary([]);
             setFinishedBooks([]);
           }
-        } catch (error) {
-        }
+        } catch (error) {}
       };
 
       fetchLibrary();

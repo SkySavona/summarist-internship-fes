@@ -15,8 +15,10 @@ const capitalizeFirstLetter = (string: string) => {
 const Settings: React.FC = () => {
   const auth = getFirebaseAuth();
   const [user] = useAuthState(auth);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<string>("Loading...");
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string>("Loading...");
+  const [subscriptionPlan, setSubscriptionPlan] =
+    useState<string>("Loading...");
+  const [subscriptionStatus, setSubscriptionStatus] =
+    useState<string>("Loading...");
   const [trialEndDate, setTrialEndDate] = useState<string>("Loading...");
   const [timeLeft, setTimeLeft] = useState<string>("Loading...");
   const [userEmail, setUserEmail] = useState<string>("Loading...");
@@ -29,48 +31,48 @@ const Settings: React.FC = () => {
       if (!user) return;
 
       try {
-        console.log("Fetching premium status...");
         const response = await fetch("/api/premium-status", {
           headers: {
             Authorization: `Bearer ${await user.getIdToken()}`,
           },
         });
         const data = await response.json();
-        console.log("Premium status response:", data);
 
         if (!isMounted) return;
 
         if (data.isPremium) {
-          console.log("Setting subscription plan to Premium");
           setSubscriptionPlan(data.subscriptionName || "Premium");
-          // Capitalize the subscription status
-          setSubscriptionStatus(capitalizeFirstLetter(data.subscriptionStatus || "Unknown"));
+          setSubscriptionStatus(
+            capitalizeFirstLetter(data.subscriptionStatus || "Unknown")
+          );
 
           if (data.subscriptionStatus === "trialing" && data.trialEnd) {
             const trialEnd = new Date(data.trialEnd);
             const now = new Date();
-            
-            setTrialEndDate(trialEnd.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }));
 
-            const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            setTrialEndDate(
+              trialEnd.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            );
+
+            const daysLeft = Math.ceil(
+              (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            );
             setTimeLeft(`${daysLeft} days`);
           } else {
             setTrialEndDate("N/A");
             setTimeLeft("N/A");
           }
         } else {
-          console.log("Setting subscription plan to No active subscription");
           setSubscriptionPlan("No active subscription");
           setSubscriptionStatus("N/A");
           setTrialEndDate("N/A");
           setTimeLeft("N/A");
         }
       } catch (error) {
-        console.error("Error fetching premium status:", error);
         if (isMounted) {
           setSubscriptionPlan("Error fetching plan");
           setSubscriptionStatus("Error");
@@ -103,13 +105,7 @@ const Settings: React.FC = () => {
   }, [user]);
 
   if (!user) {
-    return (
-      <LoginDefault
-        onLoginSuccess={() => {
-          console.log("Login successful");
-        }}
-      />
-    );
+    return <LoginDefault onLoginSuccess={() => {}} />;
   }
 
   return (

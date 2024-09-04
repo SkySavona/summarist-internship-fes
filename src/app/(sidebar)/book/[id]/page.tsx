@@ -46,19 +46,15 @@ const BookDetails: React.FC = () => {
   useEffect(() => {
     const fetchUserSubscription = async () => {
       if (user) {
-        console.log("Fetching user subscription for UID:", user.uid);
         try {
-          const response = await fetch('/api/premium-status', {
+          const response = await fetch("/api/premium-status", {
             headers: {
-              'Authorization': `Bearer ${await user.getIdToken()}`
-            }
+              Authorization: `Bearer ${await user.getIdToken()}`,
+            },
           });
           const data = await response.json();
-          console.log("Premium status response:", data);
           setIsPremium(data.isPremium);
-        } catch (error) {
-          console.error("Error fetching premium status:", error);
-        }
+        } catch (error) {}
       }
     };
 
@@ -112,36 +108,34 @@ const BookDetails: React.FC = () => {
 
   const handleAddToLibrary = async () => {
     if (!book || !user) return;
-  
+
     try {
       const token = await user.getIdToken();
-      const response = await fetch('/api/library', {
-        method: 'POST',
+      const response = await fetch("/api/library", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           book: {
             id: book.id,
             title: book.title,
             author: book.author,
-            imageLink: book.imageLink
+            imageLink: book.imageLink,
           },
-          action: isBookmarked ? 'remove' : 'add'
-        })
+          action: isBookmarked ? "remove" : "add",
+        }),
       });
-  
+
       if (!response.ok) {
-        throw new Error('Failed to update library');
+        throw new Error("Failed to update library");
       }
-  
+
       setIsBookmarked(!isBookmarked);
-    } catch (error) {
-      console.error("Error updating library:", error);
-    }
+    } catch (error) {}
   };
-  
+
   useEffect(() => {
     const fetchLibraryStatus = async () => {
       if (user && book) {
@@ -149,32 +143,27 @@ const BookDetails: React.FC = () => {
           const token = await user.getIdToken();
           const response = await fetch(`/api/library`, {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
           const data = await response.json();
-          const isBookInLibrary = data.books.some((savedBook: any) => savedBook.id === book.id);
+          const isBookInLibrary = data.books.some(
+            (savedBook: any) => savedBook.id === book.id
+          );
           setIsBookmarked(isBookInLibrary);
-        } catch (error) {
-          console.error("Error fetching library status:", error);
-        }
+        } catch (error) {}
       }
     };
-  
+
     fetchLibraryStatus();
   }, [user, book]);
-  
+
   const handleReadOrListen = () => {
     if (!book) return;
 
-    console.log("Book subscription required:", book.subscriptionRequired);
-    console.log("User premium status:", isPremium);
-
     if (book.subscriptionRequired && !isPremium) {
-      console.log("Redirecting to choose-plan page");
       router.push("/choose-plan");
     } else {
-      console.log("Navigating to player page");
       router.push(`/player/${id}`);
     }
   };
@@ -248,8 +237,7 @@ const BookDetails: React.FC = () => {
                 <div className="flex items-center">
                   <FaStar className="text-yellow-500 mr-2" />
                   <span>
-                    {book.averageRating.toFixed(1)} (
-                    {book.totalRating} ratings)
+                    {book.averageRating.toFixed(1)} ({book.totalRating} ratings)
                   </span>
                 </div>
                 <div className="flex items-center">

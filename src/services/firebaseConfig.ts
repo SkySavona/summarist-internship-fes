@@ -28,9 +28,8 @@ const initializeFirebase = (): void => {
       if (!functions) {
         throw new Error("Firebase functions failed to initialize");
       }
-
     } catch (error) {
-      throw error; 
+      throw error;
     }
   } else {
     app = getApp();
@@ -48,8 +47,14 @@ if (!functions) {
 
 const googleProvider = new GoogleAuthProvider();
 
-const createCheckoutSession = httpsCallable(functions, "ext-firestore-stripe-payments-createCheckoutSession");
-const createPortalLink = httpsCallable(functions, "ext-firestore-stripe-payments-createPortalLink");
+const createCheckoutSession = httpsCallable(
+  functions,
+  "ext-firestore-stripe-payments-createCheckoutSession"
+);
+const createPortalLink = httpsCallable(
+  functions,
+  "ext-firestore-stripe-payments-createPortalLink"
+);
 
 export {
   app,
@@ -59,7 +64,7 @@ export {
   googleProvider,
   firebaseConfig,
   createCheckoutSession,
-  createPortalLink
+  createPortalLink,
 };
 
 export const getFirebaseApp = (): FirebaseApp => {
