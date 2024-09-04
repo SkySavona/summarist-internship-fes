@@ -1,24 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { firebaseConfig } from '@/services/firebaseConfig';  
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirebaseAdmin } from '@/services/firebaseAdmin';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+const firestore = getFirestore(getFirebaseAdmin());
 
 export async function POST(request: NextRequest) {
-  const { userId, book, action } = await request.json();
-
-  if (!userId || !book || !action) {
-    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
-  }
-
   try {
-    const userLibraryRef = doc(firestore, 'libraries', userId);
-    const userLibraryDoc = await getDoc(userLibraryRef);
+    const { book, action } = await request.json();
+    
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ message: 'Missing or invalid authorization header' }, { status: 401 });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await getAuth(getFirebaseAdmin()).verifyIdToken(token);
+    const userId = decodedToken.uid;
 
-    let currentLibrary = userLibraryDoc.exists() ? userLibraryDoc.data()?.books || [] : [];
+    if (!book || !action) {
+      return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
+    }
+
+    const userLibraryRef = firestore.doc(`library/${userId}`);
+    const userLibraryDoc = await userLibraryRef.get();
+
+    let currentLibrary = userLibraryDoc.exists ? userLibraryDoc.data()?.books || [] : [];
 
     if (action === 'add') {
       currentLibrary.push(book);
@@ -28,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
     }
 
-    await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
+    await userLibraryRef.set({ books: currentLibrary }, { merge: true });
 
     return NextResponse.json({ message: 'Library updated successfully' });
   } catch (error) {
@@ -37,18 +44,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-
-  if (!userId) {
-    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
-  }
-
   try {
-    const userLibraryRef = doc(firestore, 'libraries', userId);
-    const userLibraryDoc = await getDoc(userLibraryRef);
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ message: 'Missing or invalid authorization header' }, { status: 401 });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await getAuth(getFirebaseAdmin()).verifyIdToken(token);
+    const userId = decodedToken.uid;
 
-    if (!userLibraryDoc.exists()) {
+    const userLibraryRef = firestore.doc(`library/${userId}`);
+    const userLibraryDoc = await userLibraryRef.get();
+
+    if (!userLibraryDoc.exists) {
       return NextResponse.json({ books: [] });
     }
 

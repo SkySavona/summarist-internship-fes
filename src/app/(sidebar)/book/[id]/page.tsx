@@ -17,7 +17,6 @@ import { motion } from "framer-motion";
 import SkeletonBookDetails from "@/components/ui/SkeletonBookDetails";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
-import usePremiumStatus from "@/stripe/usePremiumStatus";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { getFirebaseApp } from "@/services/firebaseConfig";
@@ -42,7 +41,27 @@ const BookDetails: React.FC = () => {
   const [audioDuration, setAudioDuration] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
-  const isPremium = usePremiumStatus(user || null);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUserSubscription = async () => {
+      if (user) {
+        try {
+          const response = await fetch("/api/premium-status", {
+            headers: {
+              Authorization: `Bearer ${await user.getIdToken()}`,
+            },
+          });
+          const data = await response.json();
+          setIsPremium(data.isPremium);
+        } catch (error) {}
+      }
+    };
+
+    if (user) {
+      fetchUserSubscription();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -87,52 +106,57 @@ const BookDetails: React.FC = () => {
     }
   }, [book]);
 
-  useEffect(() => {
-    if (user && book) {
-      const fetchLibraryStatus = async () => {
-        try {
-          const userLibraryRef = doc(firestore, 'libraries', user.uid);
-          const userLibraryDoc = await getDoc(userLibraryRef);
-
-          if (userLibraryDoc.exists()) {
-            const isBookInLibrary = userLibraryDoc.data()?.books.some(
-              (savedBook: any) => savedBook.id === book.id
-            );
-            setIsBookmarked(isBookInLibrary);
-          }
-        } catch (error) {
-        }
-      };
-
-      fetchLibraryStatus();
-    }
-  }, [user, book]);
-
   const handleAddToLibrary = async () => {
     if (!book || !user) return;
 
-    const userLibraryRef = doc(firestore, 'libraries', user.uid);
-
     try {
-      const userLibraryDoc = await getDoc(userLibraryRef);
+      const token = await user.getIdToken();
+      const response = await fetch("/api/library", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          book: {
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            imageLink: book.imageLink,
+          },
+          action: isBookmarked ? "remove" : "add",
+        }),
+      });
 
-      let currentLibrary = userLibraryDoc.exists()
-        ? userLibraryDoc.data()?.books || []
-        : [];
-
-      if (isBookmarked) {
-        currentLibrary = currentLibrary.filter(
-          (savedBook: any) => savedBook.id !== book.id
-        );
-      } else {
-        currentLibrary.push(book);
+      if (!response.ok) {
+        throw new Error("Failed to update library");
       }
 
-      await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
       setIsBookmarked(!isBookmarked);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
+
+  useEffect(() => {
+    const fetchLibraryStatus = async () => {
+      if (user && book) {
+        try {
+          const token = await user.getIdToken();
+          const response = await fetch(`/api/library`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+          const isBookInLibrary = data.books.some(
+            (savedBook: any) => savedBook.id === book.id
+          );
+          setIsBookmarked(isBookInLibrary);
+        } catch (error) {}
+      }
+    };
+
+    fetchLibraryStatus();
+  }, [user, book]);
 
   const handleReadOrListen = () => {
     if (!book) return;
@@ -213,8 +237,7 @@ const BookDetails: React.FC = () => {
                 <div className="flex items-center">
                   <FaStar className="text-yellow-500 mr-2" />
                   <span>
-                    {book.averageRating.toFixed(1)} (
-                    {book.totalRating} ratings)
+                    {book.averageRating.toFixed(1)} ({book.totalRating} ratings)
                   </span>
                 </div>
                 <div className="flex items-center">

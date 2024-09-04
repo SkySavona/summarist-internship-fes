@@ -3,7 +3,7 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 export default async function isUserPremium(user: User): Promise<boolean> {
   const db = getFirestore();
-  const customerDoc = await getDoc(doc(db, "customers", user.uid));
+  const customerDoc = await getDoc(doc(db, "users", user.uid));
   const customerData = customerDoc.data();
 
   if (customerData?.subscriptions) {

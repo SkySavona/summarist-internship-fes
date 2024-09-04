@@ -29,7 +29,7 @@ const MyLibrary: React.FC = () => {
     if (user && hydrated) {
       const fetchLibrary = async () => {
         try {
-          const userLibraryRef = doc(firestore, "libraries", user.uid);
+          const userLibraryRef = doc(firestore, "library", user.uid);
           const userLibraryDoc = await getDoc(userLibraryRef);
 
           if (userLibraryDoc.exists()) {
@@ -44,8 +44,7 @@ const MyLibrary: React.FC = () => {
             setLibrary([]);
             setFinishedBooks([]);
           }
-        } catch (error) {
-        }
+        } catch (error) {}
       };
 
       fetchLibrary();

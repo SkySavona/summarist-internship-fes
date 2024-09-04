@@ -20,7 +20,7 @@ const Help: React.FC = () => {
     e.preventDefault();
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       setToastMessage("Your message was sent successfully");
       setToastType("success");
       setShowToast(true);
@@ -40,7 +40,8 @@ const Help: React.FC = () => {
     return <LoginDefault onLoginSuccess={() => {}} />;
   }
 
-  const inputClassName = "w-full p-2 border border-gray-300 rounded outline-none focus:ring-2 focus:ring-green-1 focus:border-transparent";
+  const inputClassName =
+    "w-full p-2 border border-gray-300 rounded outline-none focus:ring-2 focus:ring-green-1 focus:border-transparent";
 
   return (
     <div className="pt-4">
@@ -57,7 +58,9 @@ const Help: React.FC = () => {
           <h2 className="text-xl font-semibold text-blue-1 mb-4">Contact Us</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-blue-1 mb-1">Name</label>
+              <label htmlFor="name" className="block text-blue-1 mb-1">
+                Name
+              </label>
               <input
                 type="text"
                 id="name"
@@ -68,7 +71,9 @@ const Help: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-blue-1 mb-1">Email</label>
+              <label htmlFor="email" className="block text-blue-1 mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
@@ -79,7 +84,9 @@ const Help: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="message" className="block text-blue-1 mb-1">Message</label>
+              <label htmlFor="message" className="block text-blue-1 mb-1">
+                Message
+              </label>
               <textarea
                 id="message"
                 value={message}
@@ -99,7 +106,11 @@ const Help: React.FC = () => {
       </div>
 
       {showToast && (
-        <div className={`fixed bottom-4 right-4 ${toastType === 'success' ? 'bg-green-1' : 'bg-red-500'} text-white p-4 rounded-md shadow-lg z-50`}>
+        <div
+          className={`fixed bottom-4 right-4 ${
+            toastType === "success" ? "bg-green-1" : "bg-red-500"
+          } text-white p-4 rounded-md shadow-lg z-50`}
+        >
           {toastMessage}
         </div>
       )}

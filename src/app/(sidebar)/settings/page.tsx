@@ -2,65 +2,110 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import Searchbar from "@/components/SearchBar";
 import LoginDefault from "@/components/LoginDefault";
 import Link from "next/link";
 
-interface UserDocument {
-  firebaseRole: string;
-  email: string;
-}
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 const Settings: React.FC = () => {
   const auth = getFirebaseAuth();
   const [user] = useAuthState(auth);
   const [subscriptionPlan, setSubscriptionPlan] =
     useState<string>("Loading...");
+  const [subscriptionStatus, setSubscriptionStatus] =
+    useState<string>("Loading...");
+  const [trialEndDate, setTrialEndDate] = useState<string>("Loading...");
+  const [timeLeft, setTimeLeft] = useState<string>("Loading...");
   const [userEmail, setUserEmail] = useState<string>("Loading...");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchSubscriptionPlan = async () => {
-      if (user) {
-        setUserEmail(user.email || "No email available");
+    let isMounted = true;
 
-        const db = getFirestore();
-        const userDocRef = doc(db, "users", user.uid);
+    const fetchPremiumStatus = async () => {
+      if (!user) return;
 
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as UserDocument;
+      try {
+        const response = await fetch("/api/premium-status", {
+          headers: {
+            Authorization: `Bearer ${await user.getIdToken()}`,
+          },
+        });
+        const data = await response.json();
 
-            if (userData.firebaseRole === "Premium") {
-              setSubscriptionPlan("Premium");
-            } else {
-              setSubscriptionPlan("No active subscription");
-            }
+        if (!isMounted) return;
+
+        if (data.isPremium) {
+          setSubscriptionPlan(data.subscriptionName || "Premium");
+          setSubscriptionStatus(
+            capitalizeFirstLetter(data.subscriptionStatus || "Unknown")
+          );
+
+          if (data.subscriptionStatus === "trialing" && data.trialEnd) {
+            const trialEnd = new Date(data.trialEnd);
+            const now = new Date();
+
+            setTrialEndDate(
+              trialEnd.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            );
+
+            const daysLeft = Math.ceil(
+              (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            setTimeLeft(`${daysLeft} days`);
           } else {
-            setSubscriptionPlan("No subscription data");
+            setTrialEndDate("N/A");
+            setTimeLeft("N/A");
           }
-        } catch (error) {
-          setSubscriptionPlan("Error fetching plan");
+        } else {
+          setSubscriptionPlan("No active subscription");
+          setSubscriptionStatus("N/A");
+          setTrialEndDate("N/A");
+          setTimeLeft("N/A");
         }
-      } else {
-        setSubscriptionPlan("No user logged in");
-        setUserEmail("No user logged in");
+      } catch (error) {
+        if (isMounted) {
+          setSubscriptionPlan("Error fetching plan");
+          setSubscriptionStatus("Error");
+          setTrialEndDate("Error");
+          setTimeLeft("Error");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchSubscriptionPlan();
+    if (user) {
+      setIsLoading(true);
+      setUserEmail(user.email || "No email available");
+      fetchPremiumStatus();
+    } else {
+      setSubscriptionPlan("No user logged in");
+      setSubscriptionStatus("N/A");
+      setTrialEndDate("N/A");
+      setTimeLeft("N/A");
+      setUserEmail("No user logged in");
+      setIsLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   if (!user) {
-    return (
-      <LoginDefault
-        onLoginSuccess={function (): void {
-          throw new Error("Function not implemented.");
-        }}
-      />
-    );
+    return <LoginDefault onLoginSuccess={() => {}} />;
   }
 
   return (
@@ -73,23 +118,55 @@ const Settings: React.FC = () => {
         <h1 className="text-3xl font-bold text-blue-1 mb-8 md:text-md mt-1 border-b pb-4 border-gray-300">
           Settings
         </h1>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-1 mb-2">
-            Your Subscription Plan
-          </h2>
-          <p className="text-blue-1">{subscriptionPlan}</p>
-        </div>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-1 mb-2">Email</h2>
-          <p className="text-blue-1">{userEmail}</p>
-        </div>
-        {subscriptionPlan !== "Premium" && (
-          <Link
-            href="/choose-plan"
-            className="bg-green-1 text-white px-4 py-2 rounded transition ease-in-out duration-300 hover:bg-green-2"
-          >
-            Subscribe Now
-          </Link>
+        {isLoading ? (
+          <p>Loading subscription details...</p>
+        ) : (
+          <>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-blue-1 mb-2">
+                Your Subscription Plan
+              </h2>
+              <p className="text-blue-1">{subscriptionPlan}</p>
+            </div>
+            {subscriptionPlan !== "No active subscription" && (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-blue-1 mb-2">
+                    Subscription Status
+                  </h2>
+                  <p className="text-blue-1">{subscriptionStatus}</p>
+                </div>
+                {subscriptionStatus === "Trialing" && (
+                  <>
+                    <div className="mb-6">
+                      <h2 className="text-xl font-semibold text-blue-1 mb-2">
+                        Trial End Date
+                      </h2>
+                      <p className="text-blue-1">{trialEndDate}</p>
+                    </div>
+                    <div className="mb-6">
+                      <h2 className="text-xl font-semibold text-blue-1 mb-2">
+                        Time Left in Trial
+                      </h2>
+                      <p className="text-blue-1">{timeLeft}</p>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-blue-1 mb-2">Email</h2>
+              <p className="text-blue-1">{userEmail}</p>
+            </div>
+            {subscriptionPlan === "No active subscription" && (
+              <Link
+                href="/choose-plan"
+                className="bg-green-1 text-white px-4 py-2 rounded transition ease-in-out duration-300 hover:bg-green-2"
+              >
+                Subscribe Now
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>

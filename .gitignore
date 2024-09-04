@@ -35,3 +35,5 @@ next-env.d.ts
 
 # ignore specific file
 src/services/summarist-internship-new-455b103a5d6f.json
+
+google-app-credentials.json

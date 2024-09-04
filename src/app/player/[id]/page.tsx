@@ -8,14 +8,13 @@ import { Book } from "@/types/index";
 import PlayerPageSidebar from "@/components/PlayerPageSidebar";
 import SearchBar from "@/components/SearchBar";
 import { motion } from "framer-motion";
-import usePremiumStatus from "@/stripe/usePremiumStatus";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { getFirebaseAuth } from "@/services/firebaseConfig";
 import Link from "next/link";
 import LoginDefault from "@/components/LoginDefault";
 import { FaCheck } from "react-icons/fa";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { getFirebaseApp } from "@/services/firebaseConfig";
 
@@ -94,10 +93,29 @@ const PlayerPage: React.FC = () => {
   const [fontSize, setFontSize] = useState("text-base");
   const auth = getFirebaseAuth();
   const [user, loading, error] = useAuthState(auth);
-  const isPremium = usePremiumStatus(user || null);
+  const [isPremium, setIsPremium] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [showFinishedPopup, setShowFinishedPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+
+  useEffect(() => {
+    const fetchPremiumStatus = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/premium-status', {
+            headers: {
+              'Authorization': `Bearer ${await user.getIdToken()}`
+            }
+          });
+          const data = await response.json();
+          setIsPremium(data.isPremium);
+        } catch (error) {
+        }
+      }
+    };
+
+    fetchPremiumStatus();
+  }, [user]);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -110,19 +128,6 @@ const PlayerPage: React.FC = () => {
         }
         const data: Book = await response.json();
         setBook(data);
-
-        if (user) {
-          const userLibraryRef = doc(firestore, "libraries", user.uid);
-          const userLibraryDoc = await getDoc(userLibraryRef);
-
-          if (userLibraryDoc.exists()) {
-            const userLibrary = userLibraryDoc.data()?.books || [];
-            const isBookFinished = userLibrary.some(
-              (savedBook: any) => savedBook.id === data.id && savedBook.finished
-            );
-            setIsFinished(isBookFinished);
-          }
-        }
       } catch (error) {
       }
     };
@@ -130,12 +135,30 @@ const PlayerPage: React.FC = () => {
     if (id) {
       fetchBookDetails();
     }
-  }, [id, user]);
+  }, [id]);
+
+  useEffect(() => {
+    if (user && book) {
+      const userLibraryRef = doc(firestore, "library", user.uid);
+      const unsubscribe = onSnapshot(userLibraryRef, (doc) => {
+        if (doc.exists()) {
+          const userLibrary = doc.data()?.books || [];
+          const isBookFinished = userLibrary.some(
+            (savedBook: any) => savedBook.id === book.id && savedBook.finished
+          );
+          setIsFinished(isBookFinished);
+        }
+      }, (error) => {
+      });
+
+      return () => unsubscribe();
+    }
+  }, [user, book]);
 
   const handleToggleFinished = async () => {
     if (!book || !user) return;
 
-    const userLibraryRef = doc(firestore, "libraries", user.uid);
+    const userLibraryRef = doc(firestore, "library", user.uid);
 
     try {
       const userLibraryDoc = await getDoc(userLibraryRef);
@@ -155,7 +178,6 @@ const PlayerPage: React.FC = () => {
       }
 
       await setDoc(userLibraryRef, { books: currentLibrary }, { merge: true });
-      setIsFinished(!isFinished);
       setPopupMessage(
         isFinished ? "Book unmarked as finished!" : "Book marked as finished!"
       );
@@ -166,11 +188,7 @@ const PlayerPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {

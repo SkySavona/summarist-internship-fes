@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
@@ -9,7 +9,9 @@ import SuggestedBooksSkeleton from "@/components/ui/SuggestedBooksSkeleton";
 import { useLoading } from "@/components/ui/LoadingContext";
 
 const SelectedBook = lazy(() => import("@/components/SelectedBook"));
-const RecommendedBooksList = lazy(() => import("@/components/RecommendedBooksList"));
+const RecommendedBooksList = lazy(
+  () => import("@/components/RecommendedBooksList")
+);
 const SuggestedBooks = lazy(() => import("@/components/SuggestedBooks"));
 
 const ForYou: React.FC = () => {
